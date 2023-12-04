@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
+use super::download;
 
 pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
     let start_time_breakdown = get_time_breakdown(start);
@@ -9,7 +10,7 @@ pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
 
 pub fn download_raw_files<'a>(
     start_time_map: &'a HashMap<&'a str, u32>,
-    end_time_map: &'a HashMap<&'a str, u32>) {
+    end_time_map: &'a HashMap<&'a str, u32>) -> Vec<String> {
     let start_minute = get_callgraph_minute_value(start_time_map);
     let mut end_minute = get_callgraph_minute_value(end_time_map);
     if let Some(second) = end_time_map.get("second") {
@@ -21,14 +22,27 @@ pub fn download_raw_files<'a>(
     let start_idx = start_minute / 3;
     let end_idx = (f64::ceil(end_minute as f64 / 3.0) as u32) - 1;
 
-    let base_url = "https://aliopentrace.oss-cn-beijing.aliyuncs.com/v2022MicroservicesTraces/CallGraph/CallGraph_";
-    let d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    println!("{:?}", d);
+    let base_url = "https://aliopentrace.oss-cn-beijing.aliyuncs.com/v2022MicroservicesTraces/CallGraph";
+    let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let dest_dir = format!("{}/data/raw", pathbuf.to_str().unwrap());
+
+    let mut downloaded_file_paths: Vec<String> = Vec::new();
 
     for i in start_idx..=end_idx {
-        let file_url = format!("{}{}.tar.gz", base_url, i);
-
+        let file_name = format!("CallGraph_{}.tar.gz", i);
+        let file_url = format!("{}/{}", base_url, file_name);
+        let dest_file = format!("{}/{}", dest_dir, file_name);
+        match download::download(&file_url, &dest_file) {
+            Ok(_) => {
+                downloaded_file_paths.push(dest_file);
+            }
+            _ => {
+                eprintln!("Error in downloading {}", file_name);
+            }
+        }
     }
+
+    downloaded_file_paths
 }
 
 pub fn get_callgraph_minute_value(time_map: &HashMap<&str, u32>) -> u32 {

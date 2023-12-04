@@ -1,2 +1,2 @@
-mod download;
+pub mod download;
 pub mod get;
