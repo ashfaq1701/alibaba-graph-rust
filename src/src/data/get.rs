@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
     let start_time_breakdown = get_time_breakdown(start);
@@ -21,10 +22,12 @@ pub fn download_raw_files<'a>(
     let end_idx = (f64::ceil(end_minute as f64 / 3.0) as u32) - 1;
 
     let base_url = "https://aliopentrace.oss-cn-beijing.aliyuncs.com/v2022MicroservicesTraces/CallGraph/CallGraph_";
+    let d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    println!("{:?}", d);
 
     for i in start_idx..=end_idx {
         let file_url = format!("{}{}.tar.gz", base_url, i);
-        println!("{}", file_url);
+
     }
 }
 
