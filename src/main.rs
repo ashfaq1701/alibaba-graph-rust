@@ -1,4 +1,5 @@
 mod data;
+mod utils;
 
 use std::env;
 use std::collections::HashMap;
@@ -107,7 +108,7 @@ fn run_get_data(options: &HashMap<&str, u32>) -> Result<(), &'static str> {
         _ => { 0 }
     };
 
-    let (calc_start_time, calc_end_time) = data::get::get_start_end_time_given_breakdown(
+    let (calc_start_time, calc_end_time) = utils::get_start_end_time_given_breakdown(
         start_day,
         start_hour,
         start_minute,
