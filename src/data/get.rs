@@ -11,7 +11,12 @@ use crate::utils;
 pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
     let start_time_breakdown = utils::get_time_breakdown(start);
     let end_time_breakdown = utils::get_time_breakdown(end);
-    let downloaded_files = download_raw_files(&start_time_breakdown, &end_time_breakdown);
+    let mut downloaded_files = download_raw_files(
+        &start_time_breakdown,
+        &end_time_breakdown
+    );
+    downloaded_files.sort();
+    println!("{:?}", downloaded_files);
 }
 
 pub fn download_raw_files<'a>(
