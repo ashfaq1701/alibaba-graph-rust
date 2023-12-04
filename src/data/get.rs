@@ -1,5 +1,62 @@
-pub fn load_files(start: u32, end: u32) {
+use std::collections::HashMap;
 
+pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
+    let start_time_breakdown = get_time_breakdown(start);
+    let end_time_breakdown = get_time_breakdown(end);
+    download_raw_files(&start_time_breakdown, &end_time_breakdown);
+}
+
+pub fn download_raw_files<'a>(
+    start_time_map: &'a HashMap<&'a str, u32>,
+    end_time_map: &'a HashMap<&'a str, u32>) {
+    let start_minute = get_callgraph_minute_value(start_time_map);
+    let mut end_minute = get_callgraph_minute_value(end_time_map);
+    if let Some(second) = end_time_map.get("second") {
+        if *second > 0 {
+            end_minute += 1;
+        }
+    }
+
+    let start_idx = start_minute / 3;
+    let end_idx = (f64::ceil(end_minute as f64 / 3.0) as u32) - 1;
+
+    let base_url = "https://aliopentrace.oss-cn-beijing.aliyuncs.com/v2022MicroservicesTraces/CallGraph/CallGraph_";
+
+    for i in start_idx..=end_idx {
+        let file_url = format!("{}{}.tar.gz", base_url, i);
+        println!("{}", file_url);
+    }
+}
+
+pub fn get_callgraph_minute_value(time_map: &HashMap<&str, u32>) -> u32 {
+    let mut minute_value: u32 = 0;
+
+    if let Some(day) = time_map.get("day") {
+        minute_value += day * 24 * 60;
+    };
+
+    if let Some(hour) = time_map.get("hour") {
+        minute_value += hour * 60;
+    };
+
+    if let Some(minute) = time_map.get("minute") {
+        minute_value += minute;
+    };
+
+    minute_value
+}
+
+pub fn get_time_breakdown<'a>(time: u32) -> HashMap<&'a str, u32> {
+    let day = time / (24 * 60 * 60);
+    let hour = (time - day * 24 * 60 * 60) / (60 * 60);
+    let minute = (time - day * 24 * 60 * 60 - hour * 60 * 60) / 60;
+    let second = time - day * 24 * 60 * 60 - hour * 60 * 60 - minute * 60;
+    let mut time_map: HashMap<&str, u32> = HashMap::new();
+    time_map.insert("day", day);
+    time_map.insert("hour", hour);
+    time_map.insert("minute", minute);
+    time_map.insert("second", second);
+    time_map
 }
 
 pub fn get_start_end_time_given_breakdown(

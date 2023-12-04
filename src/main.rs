@@ -127,9 +127,20 @@ fn run_get_data(options: &HashMap<&str, u32>) -> Result<(), &'static str> {
     }
 
     if end_time <= start_time {
-        Err("Invalid start or end parameter passed")
-    } else {
-        data::get::load_files(start_time, end_time);
-        Ok(())
+        return Err("Invalid start or end parameter passed");
+    }
+
+    match (options.get("window_size"), options.get("overlap")) {
+        (Some(window_size), Some(overlap)) => {
+            data::get::load_files(start_time, end_time, *window_size, *overlap);
+            Ok(())
+        }
+        (Some(window_size), None) => {
+            data::get::load_files(start_time, end_time, *window_size, 0);
+            Ok(())
+        }
+        _ => {
+            Err("Window size is a required parameter")
+        }
     }
 }
