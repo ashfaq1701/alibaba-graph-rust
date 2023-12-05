@@ -21,5 +21,3 @@ pub fn download(url: &str, destination: &str) -> Result<()> {
 
     Ok(())
 }
-
-

@@ -1,5 +1,6 @@
 extern crate anyhow;
 
+use std::fs;
 use std::ops::Deref;
 use threadpool::ThreadPool;
 use std::path::PathBuf;
@@ -17,7 +18,11 @@ pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
         &end_time_breakdown
     );
     downloaded_files.sort();
-    let loaded_graph_windows = graph::load::load_event_files(&downloaded_files);
+    let loaded_graph_windows = graph::load::load_event_files(
+        downloaded_files,
+        window_size,
+        overlap
+    );
     println!("{:?}", loaded_graph_windows);
 }
 
@@ -52,13 +57,19 @@ pub fn download_raw_files<'a>(
             let file_name = format!("CallGraph_{}.tar.gz", i);
             let file_url = format!("{}/{}", shared_base_url.deref(), file_name);
             let dest_file = format!("{}/{}", shared_dest_dir.deref(), file_name);
-            match download::download(&file_url, &dest_file) {
-                Ok(_) => {
-                    let mut unlocked_paths = shared_downloaded_file_paths.lock().unwrap();
-                    unlocked_paths.push(dest_file);
-                }
-                _ => {
-                    eprintln!("Error in downloading {}", file_name);
+
+            let mut unlocked_paths = shared_downloaded_file_paths.lock().unwrap();
+
+            if let Ok(_) = fs::metadata(&dest_file) {
+                unlocked_paths.push(dest_file);
+            } else {
+                match download::download(&file_url, &dest_file) {
+                    Ok(_) => {
+                        unlocked_paths.push(dest_file);
+                    }
+                    _ => {
+                        eprintln!("Error in downloading {}", file_name);
+                    }
                 }
             }
         });

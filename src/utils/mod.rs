@@ -1,4 +1,5 @@
 use std::fs::File;
+use num_integer::gcd;
 use tar::Archive;
 use flate2::read::GzDecoder;
 use crate::data::structs::TimeBreakdown;
@@ -34,4 +35,21 @@ pub fn extract_gz_file(file_path: &String, dest_path: &String) -> Result<(), &'s
     let mut archive = Archive::new(gz_decoder);
     archive.unpack(dest_path).expect("Failed to unpack archive");
     Ok(())
+}
+
+pub fn calculate_file_batch_size(data_size: u32, window_size: u32, overlap: u32) -> u32 {
+    data_size / gcd(data_size, gcd(window_size, overlap))
+}
+
+pub fn create_windows<T>(data: Vec<T>, window_size: usize) -> Vec<Vec<T>>
+    where T: Clone,
+{
+    let mut windows = Vec::new();
+
+    for i in (0..data.len()).step_by(window_size) {
+        let window: Vec<T> = data[i..].iter().cloned().take(window_size).collect();
+        windows.push(window);
+    }
+
+    windows
 }
