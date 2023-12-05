@@ -1,4 +1,7 @@
 use std::collections::HashMap;
+use std::fs::File;
+use tar::Archive;
+use flate2::read::GzDecoder;
 
 pub fn get_time_breakdown<'a>(time: u32) -> HashMap<&'a str, u32> {
     let day = time / (24 * 60 * 60);
@@ -34,4 +37,12 @@ pub fn get_start_end_time_given_breakdown(
         end_second;
 
     (start_time, end_time)
+}
+
+pub fn extract_gz_file(file_path: &String, dest_path: &String) -> Result<(), &'static str> {
+    let file = File::open(file_path).expect("Failed to open file");
+    let gz_decoder = GzDecoder::new(file);
+    let mut archive = Archive::new(gz_decoder);
+    archive.unpack(dest_path).expect("Failed to unpack archive");
+    Ok(())
 }

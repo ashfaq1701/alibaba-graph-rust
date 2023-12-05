@@ -1,5 +1,6 @@
 mod data;
 mod utils;
+mod graph;
 
 use std::env;
 use std::collections::HashMap;

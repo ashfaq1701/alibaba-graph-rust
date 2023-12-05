@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use super::download;
 use std::sync::{Arc, Mutex};
 use crate::utils;
+use crate::graph;
 
 pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
     let start_time_breakdown = utils::get_time_breakdown(start);
@@ -16,7 +17,8 @@ pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
         &end_time_breakdown
     );
     downloaded_files.sort();
-    println!("{:?}", downloaded_files);
+    let loaded_graph_windows = graph::load::load_event_files(&downloaded_files);
+    println!("{:?}", loaded_graph_windows);
 }
 
 pub fn download_raw_files<'a>(
