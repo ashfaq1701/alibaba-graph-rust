@@ -1,6 +1,5 @@
 extern crate anyhow;
 
-use std::collections::HashMap;
 use std::ops::Deref;
 use threadpool::ThreadPool;
 use std::path::PathBuf;
@@ -8,6 +7,7 @@ use super::download;
 use std::sync::{Arc, Mutex};
 use crate::utils;
 use crate::graph;
+use super::structs::TimeBreakdown;
 
 pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
     let start_time_breakdown = utils::get_time_breakdown(start);
@@ -22,14 +22,12 @@ pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
 }
 
 pub fn download_raw_files<'a>(
-    start_time_map: &'a HashMap<&'a str, u32>,
-    end_time_map: &'a HashMap<&'a str, u32>) -> Vec<String> {
-    let start_minute = get_callgraph_minute_value(start_time_map);
-    let mut end_minute = get_callgraph_minute_value(end_time_map);
-    if let Some(second) = end_time_map.get("second") {
-        if *second > 0 {
-            end_minute += 1;
-        }
+    start_time_breakdown: &'a TimeBreakdown,
+    end_time_breakdown: &'a TimeBreakdown) -> Vec<String> {
+    let start_minute = get_callgraph_minute_value(start_time_breakdown);
+    let mut end_minute = get_callgraph_minute_value(end_time_breakdown);
+    if end_time_breakdown.second > 0 {
+        end_minute += 1;
     }
 
     let start_idx = start_minute / 3;
@@ -72,20 +70,10 @@ pub fn download_raw_files<'a>(
     downloaded_files
 }
 
-pub fn get_callgraph_minute_value(time_map: &HashMap<&str, u32>) -> u32 {
+pub fn get_callgraph_minute_value(time_breakdown: &TimeBreakdown) -> u32 {
     let mut minute_value: u32 = 0;
-
-    if let Some(day) = time_map.get("day") {
-        minute_value += day * 24 * 60;
-    };
-
-    if let Some(hour) = time_map.get("hour") {
-        minute_value += hour * 60;
-    };
-
-    if let Some(minute) = time_map.get("minute") {
-        minute_value += minute;
-    };
-
+    minute_value += time_breakdown.day * 24 * 60;
+    minute_value += time_breakdown.hour * 60;
+    minute_value += time_breakdown.minute;
     minute_value
 }

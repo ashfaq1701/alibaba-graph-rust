@@ -109,15 +109,23 @@ fn run_get_data(options: &HashMap<&str, u32>) -> Result<(), &'static str> {
         _ => { 0 }
     };
 
+    let start = data::structs::TimeBreakdown {
+        day: start_day,
+        hour: start_hour,
+        minute: start_minute,
+        second: start_second
+    };
+
+    let end = data::structs::TimeBreakdown {
+        day: end_day,
+        hour: end_hour,
+        minute: end_minute,
+        second: end_second
+    };
+
     let (calc_start_time, calc_end_time) = utils::get_start_end_time_given_breakdown(
-        start_day,
-        start_hour,
-        start_minute,
-        start_second,
-        end_day,
-        end_hour,
-        end_minute,
-        end_second
+        &start,
+        &end
     );
 
     if start_time == 0 {
