@@ -51,7 +51,7 @@ pub fn calculate_file_batch_size(s: u32, w: u32, o: u32, total: u32) -> u32 {
         batches += 1;
     }
 
-    return total
+    total
 }
 
 pub fn create_windows<T>(data: Vec<T>, window_size: usize) -> Vec<Vec<T>>
