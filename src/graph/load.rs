@@ -22,7 +22,6 @@ pub fn load_event_files(
     let loaded_graphs = Vec::new();
     let total_files = file_paths.len() as u32;
     let batch_size = calculate_file_batch_size(180, window_size, overlap, total_files);
-    println!("Batch Size {}", batch_size);
     let windowed_paths = create_windows(file_paths, batch_size as usize);
 
     windowed_paths
@@ -67,8 +66,6 @@ pub fn load_event_file(
     graph_mutex: &Mutex<&Graph>,
     connection_prop: &ConnectionProp) -> Result<()> {
 
-    println!("Starting to load the file {}", file_path);
-
     println!("Extracting file {} in /tmp directory", file_path);
     utils::extract_gz_file(file_path, &"/tmp".to_string())
         .expect("Error in extracting file");
@@ -78,10 +75,18 @@ pub fn load_event_file(
     let file_parts: Vec<&str> = file_name.split(".").collect();
     let dst_file_path = format!("{}/{}.csv", "/tmp", file_parts[0]);
 
-    populate_graph(&dst_file_path, graph_mutex, connection_prop)?;
+    match populate_graph(&dst_file_path, graph_mutex, connection_prop) {
+        Ok(_) => {
+            println!("Loaded file {}", dst_file_path);
+        }
+        Err(err) => {
+            println!("Error happened while populating graph - {}", err);
+        }
+    };
 
-    fs::remove_file(&dst_file_path)?;
     println!("Deleting file {}", dst_file_path);
+    fs::remove_file(&dst_file_path)?;
+
     Ok(())
 }
 
@@ -90,6 +95,7 @@ pub fn populate_graph(
     graph_mutex: &Mutex<&Graph>,
     connection_prop: &ConnectionProp
 ) -> Result<()> {
+    println!("Starting to load the file {}", file_path);
     let file = File::open(file_path)?;
 
     let mut rdr = ReaderBuilder::new().from_reader(file);
@@ -146,6 +152,5 @@ pub fn populate_graph(
         }
     }
 
-    println!("Loaded file {}", file_path);
     Ok(())
 }
