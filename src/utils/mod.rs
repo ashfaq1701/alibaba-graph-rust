@@ -40,15 +40,11 @@ pub fn extract_gz_file(file_path: &String, dest_path: &String) -> Result<(), &'s
 }
 
 pub fn calculate_file_batch_size(s: u32, w: u32, o: u32, total: u32) -> u32 {
-    let mut batches = 1;
-
-    while batches <= total {
+    for batches in 1..=total {
         let remainder = (s * batches - o) % (w - o);
         if remainder == 0 {
             return batches;
         }
-
-        batches += 1;
     }
 
     total
