@@ -70,6 +70,7 @@ pub fn download_raw_files<'a>(
             let mut unlocked_paths = shared_downloaded_file_paths.lock().unwrap();
 
             if let Ok(_) = fs::metadata(&dest_file) {
+                println!("File {} already exists", file_name);
                 unlocked_paths.push(dest_file);
             } else {
                 match download::download(&file_url, &dest_file) {

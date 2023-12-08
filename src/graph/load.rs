@@ -20,7 +20,9 @@ pub fn load_event_files(
     connection_prop: &ConnectionProp
 ) -> Result<Vec<String>> {
     let loaded_graphs = Vec::new();
-    let batch_size = calculate_file_batch_size(180, window_size, overlap);
+    let total_files = file_paths.len() as u32;
+    let batch_size = calculate_file_batch_size(180, window_size, overlap, total_files);
+    println!("Batch Size {}", batch_size);
     let windowed_paths = create_windows(file_paths, batch_size as usize);
 
     windowed_paths
@@ -46,6 +48,8 @@ pub fn load_event_file_window(
     batch_size: u32,
     connection_prop: &ConnectionProp
 ) -> Result<Graph> {
+    println!("Starting to load batch {} of size {}, files are {:?}", window_idx, file_window.len(), file_window);
+
     let graph = Graph::new();
     let graph_mutex = Mutex::new(&graph);
 
@@ -63,6 +67,9 @@ pub fn load_event_file(
     graph_mutex: &Mutex<&Graph>,
     connection_prop: &ConnectionProp) -> Result<()> {
 
+    println!("Starting to load the file {}", file_path);
+
+    println!("Extracting file {} in /tmp directory", file_path);
     utils::extract_gz_file(file_path, &"/tmp".to_string())
         .expect("Error in extracting file");
 
@@ -73,7 +80,8 @@ pub fn load_event_file(
 
     populate_graph(&dst_file_path, graph_mutex, connection_prop)?;
 
-    fs::remove_file(dst_file_path)?;
+    fs::remove_file(&dst_file_path)?;
+    println!("Deleting file {}", dst_file_path);
     Ok(())
 }
 

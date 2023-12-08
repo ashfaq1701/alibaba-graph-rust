@@ -3,6 +3,7 @@ use std::fs::File;
 use num_integer::gcd;
 use tar::Archive;
 use flate2::read::GzDecoder;
+use raphtory::algorithms::cores::k_core::k_core;
 use crate::data::structs::TimeBreakdown;
 
 pub fn get_time_breakdown<'a>(time: u32) -> TimeBreakdown {
@@ -38,8 +39,19 @@ pub fn extract_gz_file(file_path: &String, dest_path: &String) -> Result<(), &'s
     Ok(())
 }
 
-pub fn calculate_file_batch_size(data_size: u32, window_size: u32, overlap: u32) -> u32 {
-    data_size / gcd(data_size, gcd(window_size, overlap))
+pub fn calculate_file_batch_size(s: u32, w: u32, o: u32, total: u32) -> u32 {
+    let mut batches = 1;
+
+    while batches <= total {
+        let remainder = (s * batches - o) % (w - o);
+        if remainder == 0 {
+            return batches;
+        }
+
+        batches += 1;
+    }
+
+    return total
 }
 
 pub fn create_windows<T>(data: Vec<T>, window_size: usize) -> Vec<Vec<T>>
