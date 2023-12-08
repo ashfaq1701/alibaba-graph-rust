@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 use num_integer::gcd;
 use tar::Archive;
@@ -52,4 +53,23 @@ pub fn create_windows<T>(data: Vec<T>, window_size: usize) -> Vec<Vec<T>>
     }
 
     windows
+}
+
+pub fn get_int_option_value(options: &HashMap<&str, &str>, k: &str) -> Option<u32> {
+    match options.get(k) {
+        Some(str_value) => {
+            match str_value.parse::<u32>() {
+                Ok(value) => {
+                    Some(value)
+                }
+                _ => {
+                    eprintln!("Couldn't parse integer value from options");
+                    None
+                }
+            }
+        }
+        _ => {
+            None
+        }
+    }
 }

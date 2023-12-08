@@ -8,9 +8,16 @@ use super::download;
 use std::sync::{Arc, Mutex};
 use crate::utils;
 use crate::graph;
-use super::structs::TimeBreakdown;
+use anyhow::Result;
+use super::structs::{ConnectionProp, TimeBreakdown};
 
-pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
+pub fn load_files<'a>(
+    start: u32,
+    end: u32,
+    window_size: u32,
+    overlap: u32,
+    connection_prop: &ConnectionProp
+) -> Result<Vec<String>> {
     let start_time_breakdown = utils::get_time_breakdown(start);
     let end_time_breakdown = utils::get_time_breakdown(end);
     let mut downloaded_files = download_raw_files(
@@ -21,9 +28,11 @@ pub fn load_files<'a>(start: u32, end: u32, window_size: u32, overlap: u32) {
     let loaded_graph_windows = graph::load::load_event_files(
         downloaded_files,
         window_size,
-        overlap
-    );
-    println!("{:?}", loaded_graph_windows);
+        overlap,
+        connection_prop
+    )?;
+
+    Ok(loaded_graph_windows)
 }
 
 pub fn download_raw_files<'a>(

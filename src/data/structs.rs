@@ -4,3 +4,8 @@ pub struct TimeBreakdown {
     pub minute: u32,
     pub second: u32
 }
+
+pub enum ConnectionProp {
+    MicroserviceId,
+    InstanceId
+}

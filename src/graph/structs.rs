@@ -1,26 +1,16 @@
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Deserialize, std::fmt::Debug)]
-pub struct TraceRaw {
-    timestamp: String,
+pub struct Trace {
+    pub timestamp: i64,
     traceid: String,
     service: String,
     rpc_id: String,
     rpctype: String,
-    um: String,
-    uminstanceid: String,
+    pub um: String,
+    pub uminstanceid: String,
     interface: String,
-    dm: String,
-    dminstanceid: String,
-    rt: String
-}
-
-#[derive(std::fmt::Debug)]
-pub struct Trace {
-    timestamp: u32,
-    um: String,
-    uminstanceid: Option<String>,
-    dm: String,
-    dminstanceid: Option<String>,
-    rt: String
+    pub dm: String,
+    pub dminstanceid: String,
+    pub rt: f32
 }

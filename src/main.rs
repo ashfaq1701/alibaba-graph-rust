@@ -4,11 +4,15 @@ mod graph;
 
 use std::env;
 use std::collections::HashMap;
+use crate::data::structs::ConnectionProp;
+use crate::utils::get_int_option_value;
+use std::error::Error;
+use anyhow::{anyhow, Result};
 
 fn main() {
     let command = env::args().nth(1);
     let args: Vec<String> = env::args().collect();
-    let mut options: HashMap<&str, u32> = HashMap::new();
+    let mut options: HashMap<&str, &str> = HashMap::new();
     for arg in args.iter().skip(2) {
         let parts: Vec<&str> = arg
             .split("=")
@@ -18,17 +22,7 @@ fn main() {
             continue;
         }
 
-        let key = parts[0];
-        let maybe_value = parts[1].parse::<u32>();
-        match maybe_value {
-            Ok(value) => {
-                options.insert(key, value);
-            }
-            _ => {
-                eprintln!("Invalid option passed {}", parts[1]);
-                continue;
-            }
-        }
+        options.insert(parts[0], parts[1]);
     }
 
     match command.as_deref() {
@@ -51,62 +45,72 @@ fn main() {
     }
 }
 
-fn run_get_data(options: &HashMap<&str, u32>) -> Result<(), &'static str> {
+fn run_get_data(options: &HashMap<&str, &str>) -> Result<()> {
     let mut start_time: u32 = 0;
     let mut end_time: u32 = 0;
 
-    match (options.get("start_time"), options.get("end_time")) {
+    match (get_int_option_value(options, "start_time"), get_int_option_value(options,"end_time")) {
         (Some(start), Some(end)) => {
-            start_time = *start;
-            end_time = *end;
+            start_time = start;
+            end_time = end;
         }
         (Some(start), None) => {
-            start_time = *start;
+            start_time = start;
         }
         (None, Some(end)) => {
-            end_time = *end;
+            end_time = end;
         }
         _ => {}
     }
 
-    let start_day = match options.get("start_day") {
-        Some(sd) => { *sd }
+    let start_day = match get_int_option_value(options, "start_day") {
+        Some(sd) => { sd }
         _ => { 0 }
     };
 
-    let start_hour = match options.get("start_hour") {
-        Some(sh) => { *sh }
+    let start_hour = match get_int_option_value(options, "start_hour") {
+        Some(sh) => { sh }
         _ => { 0 }
     };
 
-    let start_minute = match options.get("start_minute") {
-        Some(sm) => { *sm }
+    let start_minute = match get_int_option_value(options, "start_minute") {
+        Some(sm) => { sm }
         _ => { 0 }
     };
 
-    let start_second = match options.get("start_second") {
-        Some(ss) => { *ss }
+    let start_second = match get_int_option_value(options, "start_second") {
+        Some(ss) => { ss }
         _ => { 0 }
     };
 
-    let end_day = match options.get("end_day") {
-        Some(ed) => { *ed }
+    let end_day = match get_int_option_value(options, "end_day") {
+        Some(ed) => { ed }
         _ => { 0 }
     };
 
-    let end_hour = match options.get("end_hour") {
-        Some(eh) => { *eh }
+    let end_hour = match get_int_option_value(options, "end_hour") {
+        Some(eh) => { eh }
         _ => { 0 }
     };
 
-    let end_minute = match options.get("end_minute") {
-        Some(em) => { *em }
+    let end_minute = match get_int_option_value(options, "end_minute") {
+        Some(em) => { em }
         _ => { 0 }
     };
 
-    let end_second = match options.get("end_second") {
-        Some(es) => { *es }
+    let end_second = match get_int_option_value(options, "end_second") {
+        Some(es) => { es }
         _ => { 0 }
+    };
+
+    let connection_prop = if let Some(connection_prop_str) = options.get("connection_prop") {
+        if *connection_prop_str == "instance_id" {
+            ConnectionProp::InstanceId
+        } else {
+            ConnectionProp::MicroserviceId
+        }
+    } else {
+        ConnectionProp::MicroserviceId
     };
 
     let start = data::structs::TimeBreakdown {
@@ -137,20 +141,20 @@ fn run_get_data(options: &HashMap<&str, u32>) -> Result<(), &'static str> {
     }
 
     if end_time <= start_time {
-        return Err("Invalid start or end parameter passed");
+        return Err(anyhow!("Invalid start or end parameter passed"));
     }
 
-    match (options.get("window_size"), options.get("overlap")) {
+    match (get_int_option_value(options, "window_size"), get_int_option_value(options, "overlap")) {
         (Some(window_size), Some(overlap)) => {
-            data::get::load_files(start_time, end_time, *window_size, *overlap);
+            data::get::load_files(start_time, end_time, window_size, overlap, &connection_prop)?;
             Ok(())
         }
         (Some(window_size), None) => {
-            data::get::load_files(start_time, end_time, *window_size, 0);
+            data::get::load_files(start_time, end_time, window_size, 0, &connection_prop)?;
             Ok(())
         }
         _ => {
-            Err("Window size is a required parameter")
+            Err(anyhow!("Window size is a required parameter"))
         }
     }
 }

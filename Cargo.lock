@@ -54,11 +54,14 @@ name = "alibaba-graph"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "csv",
  "flate2",
  "num-integer",
  "raphtory",
+ "rayon",
  "reqwest",
  "serde",
+ "serde_with",
  "tar",
  "threadpool",
 ]
