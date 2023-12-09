@@ -29,7 +29,8 @@ pub fn load_files<'a>(
         downloaded_files,
         window_size,
         overlap,
-        connection_prop
+        connection_prop,
+        end
     )?;
 
     Ok(loaded_graph_windows)

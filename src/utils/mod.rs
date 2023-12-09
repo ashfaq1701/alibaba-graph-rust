@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 use std::fs::File;
-use num_integer::gcd;
 use tar::Archive;
 use flate2::read::GzDecoder;
-use raphtory::algorithms::cores::k_core::k_core;
 use crate::data::structs::TimeBreakdown;
 
 pub fn get_time_breakdown<'a>(time: u32) -> TimeBreakdown {
@@ -80,4 +78,28 @@ pub fn get_int_option_value(options: &HashMap<&str, &str>, k: &str) -> Option<u3
             None
         }
     }
+}
+
+pub fn get_windows(
+    batch_idx: u32,
+    batch_size: u32,
+    window_size: u32,
+    overlap: u32,
+    end: u32
+) -> Vec<(u32, u32)> {
+    let window_start = 180 * batch_size * batch_idx;
+    let window_end = window_start + 180 * batch_size;
+    let mut windows: Vec<(u32, u32)> = Vec::new();
+    let mut current = window_start;
+
+    while current + window_size <= window_end && current + window_size <= end {
+        windows.push((current, current + window_size - 1));
+        current = current + window_size - overlap;
+    }
+
+    windows
+}
+
+pub fn get_window_count(dataset_size: u32, window_size: u32, overlap: u32) -> u32 {
+    ((dataset_size - window_size) as f64 / (window_size - overlap) as f64).ceil() as u32 + 1
 }

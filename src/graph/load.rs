@@ -11,13 +11,15 @@ use crate::graph::structs::{Trace};
 use anyhow::Result;
 use raphtory::core::ArcStr;
 use rayon::prelude::*;
+use crate::graph::save::window_graph_and_save;
 use crate::utils::{calculate_file_batch_size, create_windows};
 
 pub fn load_event_files(
     file_paths: Vec<String>,
     window_size: u32,
     overlap: u32,
-    connection_prop: &ConnectionProp
+    connection_prop: &ConnectionProp,
+    end: u32
 ) -> Result<Vec<String>> {
     let loaded_graphs = Vec::new();
     let total_files = file_paths.len() as u32;
@@ -27,12 +29,15 @@ pub fn load_event_files(
     windowed_paths
         .par_iter()
         .enumerate()
-        .try_for_each(move |(window_idx, file_window)| -> Result<()> {
+        .try_for_each(move |(batch_idx, file_batch)| -> Result<()> {
             let current_loaded_graph = load_event_file_window(
-                file_window,
-                window_idx,
+                file_batch,
+                batch_idx as u32,
                 batch_size,
-                connection_prop
+                connection_prop,
+                window_size,
+                overlap,
+                end
             )?;
 
             Ok(())
@@ -42,21 +47,26 @@ pub fn load_event_files(
 }
 
 pub fn load_event_file_window(
-    file_window: &Vec<String>,
-    window_idx: usize,
+    file_batch: &Vec<String>,
+    batch_idx: u32,
     batch_size: u32,
-    connection_prop: &ConnectionProp
+    connection_prop: &ConnectionProp,
+    window_size: u32,
+    overlap: u32,
+    end: u32
 ) -> Result<Graph> {
-    println!("Starting to load batch {} of size {}, files are {:?}", window_idx, file_window.len(), file_window);
+    println!("Starting to load batch {} of size {}, files are {:?}", batch_idx, file_batch.len(), file_batch);
 
     let graph = Graph::new();
     let graph_mutex = Mutex::new(&graph);
 
-    file_window
+    file_batch
         .par_iter()
         .try_for_each(|file_path|
             load_event_file(file_path, &graph_mutex, connection_prop)
         )?;
+
+    window_graph_and_save(&graph, window_size, overlap, batch_idx, batch_size, end)?;
 
     Ok(graph)
 }
