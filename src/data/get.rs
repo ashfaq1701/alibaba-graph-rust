@@ -30,6 +30,7 @@ pub fn load_files<'a>(
         window_size,
         overlap,
         connection_prop,
+        start,
         end
     )?;
 

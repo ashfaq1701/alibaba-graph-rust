@@ -12,16 +12,17 @@ use anyhow::Result;
 use raphtory::core::ArcStr;
 use rayon::prelude::*;
 use crate::graph::save::window_graph_and_save;
-use crate::utils::{calculate_file_batch_size, create_windows};
+use crate::utils::{calculate_file_batch_size, create_windows, get_closest_file_start};
 
 pub fn load_event_files(
     file_paths: Vec<String>,
     window_size: u32,
     overlap: u32,
     connection_prop: &ConnectionProp,
+    start: u32,
     end: u32
 ) -> Result<Vec<String>> {
-    let loaded_graphs = Vec::new();
+    let mut loaded_graphs = Vec::new();
     let total_files = file_paths.len() as u32;
     let batch_size = calculate_file_batch_size(180, window_size, overlap, total_files);
     let windowed_paths = create_windows(file_paths, batch_size as usize);
@@ -30,6 +31,7 @@ pub fn load_event_files(
         .par_iter()
         .enumerate()
         .try_for_each(move |(batch_idx, file_batch)| -> Result<()> {
+            let file_start = get_closest_file_start(start);
             let current_loaded_graph = load_event_file_window(
                 file_batch,
                 batch_idx as u32,
@@ -37,6 +39,8 @@ pub fn load_event_files(
                 connection_prop,
                 window_size,
                 overlap,
+                file_start,
+                start,
                 end
             )?;
 
@@ -53,8 +57,10 @@ pub fn load_event_file_window(
     connection_prop: &ConnectionProp,
     window_size: u32,
     overlap: u32,
+    file_start: u32,
+    start: u32,
     end: u32
-) -> Result<Graph> {
+) -> Result<Vec<String>> {
     println!("Starting to load batch {} of size {}, files are {:?}", batch_idx, file_batch.len(), file_batch);
 
     let graph = Graph::new();
@@ -66,9 +72,18 @@ pub fn load_event_file_window(
             load_event_file(file_path, &graph_mutex, connection_prop)
         )?;
 
-    window_graph_and_save(&graph, window_size, overlap, batch_idx, batch_size, end)?;
+    let current_window_files = window_graph_and_save(
+        &graph,
+        window_size,
+        overlap,
+        batch_idx,
+        batch_size,
+        file_start,
+        start,
+        end
+    )?;
 
-    Ok(graph)
+    Ok(current_window_files)
 }
 
 pub fn load_event_file(

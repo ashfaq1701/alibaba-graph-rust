@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use raphtory::prelude::{Graph, GraphViewOps, TimeOps};
 use anyhow::Result;
-use raphtory::db::api::view::internal::GraphOps;
 use crate::utils::{get_window_count, get_windows};
 use rayon::prelude::*;
 
@@ -11,11 +10,20 @@ pub fn window_graph_and_save(
     overlap: u32,
     batch_idx: u32,
     batch_size: u32,
+    file_start: u32,
+    start: u32,
     end: u32
 ) -> Result<Vec<String>> {
-    println!("{} Graph total vertices {}", batch_idx, graph.vertices().len());
     let window_files: Vec<String> = Vec::new();
-    let windows = get_windows(batch_idx, batch_size, window_size, overlap, end);
+    let windows = get_windows(
+        batch_idx,
+        batch_size,
+        window_size,
+        overlap,
+        file_start,
+        start,
+        end
+    );
     let batch_total_time = batch_size * 180;
     let window_per_batch = get_window_count(batch_total_time, window_size, overlap);
 
@@ -25,8 +33,14 @@ pub fn window_graph_and_save(
         .par_iter()
         .enumerate()
         .try_for_each(|(window_idx, (start, end))|
-            create_and_save_window(graph, start, end, &(window_idx as u32), &starting_window_idx)
-        )?;
+            create_and_save_window(
+                graph,
+                start,
+                end,
+                &(window_idx as u32),
+                &starting_window_idx
+            )
+        ).expect("Error while saving windows");
 
     Ok(window_files)
 }
