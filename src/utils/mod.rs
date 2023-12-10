@@ -82,20 +82,21 @@ pub fn get_int_option_value(options: &HashMap<&str, &str>, k: &str) -> Option<u3
 
 pub fn get_windows(
     batch_idx: u32,
-    batch_size: u32,
+    batch_count_files: u32,
     window_size: u32,
     overlap: u32,
     file_start: u32,
     start: u32,
     end: u32
 ) -> Vec<(u32, u32)> {
-    let window_start = file_start + 180 * batch_size * batch_idx;
-    let window_end = file_start + window_start + 180 * batch_size;
+    let batch_start = file_start + 180 * batch_count_files * batch_idx;
+    let batch_end = batch_start + 180 * batch_count_files;
     let mut windows: Vec<(u32, u32)> = Vec::new();
-    let mut current = window_start;
+    let mut current = batch_start;
 
-    while current + window_size <= window_end && current + window_size <= end {
+    while current + window_size <= batch_end && current + window_size <= end {
         if current < start {
+            current = current + window_size - overlap;
             continue
         }
 

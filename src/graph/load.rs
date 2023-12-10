@@ -22,38 +22,38 @@ pub fn load_event_files(
     start: u32,
     end: u32
 ) -> Result<Vec<String>> {
-    let mut loaded_graphs = Vec::new();
     let total_files = file_paths.len() as u32;
-    let batch_size = calculate_file_batch_size(180, window_size, overlap, total_files);
-    let windowed_paths = create_windows(file_paths, batch_size as usize);
+    let batch_count_files = calculate_file_batch_size(180, window_size, overlap, total_files);
+    let windowed_paths = create_windows(file_paths, batch_count_files as usize);
 
-    windowed_paths
+    let maybe_loaded_files: Result<Vec<Vec<String>>> = windowed_paths
         .par_iter()
         .enumerate()
-        .try_for_each(move |(batch_idx, file_batch)| -> Result<()> {
+        .map(move |(batch_idx, file_batch)| {
             let file_start = get_closest_file_start(start);
-            let current_loaded_graph = load_event_file_window(
+            load_event_file_window(
                 file_batch,
                 batch_idx as u32,
-                batch_size,
+                batch_count_files,
                 connection_prop,
                 window_size,
                 overlap,
                 file_start,
                 start,
                 end
-            )?;
+            )
+        })
+        .collect();
 
-            Ok(())
-        }).expect("Failed loading window");
+    let loaded_files = maybe_loaded_files?;
 
-    Ok(loaded_graphs)
+    Ok(loaded_files.concat())
 }
 
 pub fn load_event_file_window(
     file_batch: &Vec<String>,
     batch_idx: u32,
-    batch_size: u32,
+    batch_count_files: u32,
     connection_prop: &ConnectionProp,
     window_size: u32,
     overlap: u32,
@@ -77,7 +77,7 @@ pub fn load_event_file_window(
         window_size,
         overlap,
         batch_idx,
-        batch_size,
+        batch_count_files,
         file_start,
         start,
         end

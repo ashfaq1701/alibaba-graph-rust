@@ -6,7 +6,6 @@ use std::env;
 use std::collections::HashMap;
 use crate::data::structs::ConnectionProp;
 use crate::utils::get_int_option_value;
-use std::error::Error;
 use anyhow::{anyhow, Result};
 
 fn main() {
@@ -146,7 +145,16 @@ fn run_get_data(options: &HashMap<&str, &str>) -> Result<()> {
 
     match (get_int_option_value(options, "window_size"), get_int_option_value(options, "overlap")) {
         (Some(window_size), Some(overlap)) => {
-            data::get::load_files(start_time, end_time, window_size, overlap, &connection_prop)?;
+            let loaded_window_files = data::get::load_files(
+                start_time,
+                end_time,
+                window_size,
+                overlap,
+                &connection_prop
+            )?;
+
+            println!("Windowed graphs are stored in the following files {:?}", loaded_window_files);
+
             Ok(())
         }
         (Some(window_size), None) => {

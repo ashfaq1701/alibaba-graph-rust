@@ -25,7 +25,7 @@ pub fn load_files<'a>(
         &end_time_breakdown
     );
     downloaded_files.sort();
-    let loaded_graph_windows = graph::load::load_event_files(
+    let loaded_window_files = graph::load::load_event_files(
         downloaded_files,
         window_size,
         overlap,
@@ -34,7 +34,7 @@ pub fn load_files<'a>(
         end
     )?;
 
-    Ok(loaded_graph_windows)
+    Ok(loaded_window_files)
 }
 
 pub fn download_raw_files<'a>(
@@ -53,7 +53,7 @@ pub fn download_raw_files<'a>(
     let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let dest_dir = Arc::new(format!("{}/data/raw", pathbuf.to_str().unwrap()));
 
-    let mut downloaded_file_paths = Arc::new(Mutex::new(Vec::<String>::new()));
+    let downloaded_file_paths = Arc::new(Mutex::new(Vec::<String>::new()));
 
     let n_workers = 5;
     let pool = ThreadPool::new(n_workers);

@@ -1,15 +1,15 @@
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize};
 
 #[derive(Deserialize, std::fmt::Debug)]
 pub struct Trace {
     pub timestamp: i64,
-    traceid: String,
-    service: String,
-    rpc_id: String,
-    rpctype: String,
+    _traceid: String,
+    _service: String,
+    _rpc_id: String,
+    _rpctype: String,
     pub um: String,
     pub uminstanceid: String,
-    interface: String,
+    _interface: String,
     pub dm: String,
     pub dminstanceid: String,
     pub rt: f32

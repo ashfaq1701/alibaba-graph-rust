@@ -9,40 +9,52 @@ pub fn window_graph_and_save(
     window_size: u32,
     overlap: u32,
     batch_idx: u32,
-    batch_size: u32,
+    batch_count_files: u32,
     file_start: u32,
     start: u32,
     end: u32
 ) -> Result<Vec<String>> {
-    let window_files: Vec<String> = Vec::new();
     let windows = get_windows(
         batch_idx,
-        batch_size,
+        batch_count_files,
         window_size,
         overlap,
         file_start,
         start,
         end
     );
-    let batch_total_time = batch_size * 180;
+
+    println!("{}{:?}", batch_idx, windows);
+
+    let batch_total_time = batch_count_files * 180;
     let window_per_batch = get_window_count(batch_total_time, window_size, overlap);
+    let first_batch_offset = get_window_count(
+        start % batch_total_time,
+        window_size,
+        overlap
+    );
 
     let starting_window_idx = window_per_batch * batch_idx;
 
-    windows
+    let maybe_loaded_window_files: Result<Vec<String>> = windows
         .par_iter()
         .enumerate()
-        .try_for_each(|(window_idx, (start, end))|
+        .map(|(window_idx, (start, end))| {
+            let window_idx_offset = if batch_idx > 0 { first_batch_offset } else { 0 };
             create_and_save_window(
                 graph,
                 start,
                 end,
                 &(window_idx as u32),
-                &starting_window_idx
+                &starting_window_idx,
+                &window_idx_offset
             )
-        ).expect("Error while saving windows");
+        })
+        .collect();
 
-    Ok(window_files)
+    let loaded_window_files=  maybe_loaded_window_files?;
+
+    Ok(loaded_window_files)
 }
 
 pub fn create_and_save_window(
@@ -50,9 +62,10 @@ pub fn create_and_save_window(
     start: &u32,
     end: &u32,
     window_idx: &u32,
-    start_idx: &u32
-) -> Result<()> {
-    let total_idx = *start_idx + *window_idx;
+    start_idx: &u32,
+    window_idx_offset: &u32
+) -> Result<String> {
+    let total_idx = *start_idx + *window_idx - *window_idx_offset;
     println!("Started loading window - {} ({}, {})", total_idx, start, end);
 
     let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -73,5 +86,5 @@ pub fn create_and_save_window(
             println!("Error while saving window - {} ({}, {}) - {}", total_idx, start, end, e);
         }
     };
-    Ok(())
+    Ok(dest_path)
 }
