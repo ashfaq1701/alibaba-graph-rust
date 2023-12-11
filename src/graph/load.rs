@@ -1,18 +1,18 @@
+use std::cmp::min;
 use raphtory::{prelude::*, };
 use std::fs;
 use std::fs::File;
 use std::path::Path;
 use std::sync::Mutex;
 use csv::ReaderBuilder;
-use raphtory::prelude::Graph;
 use crate::data::structs::ConnectionProp;
 use crate::utils;
 use crate::graph::structs::{Trace};
 use anyhow::Result;
 use raphtory::core::ArcStr;
-use rayon::prelude::*;
+use raphtory::db::graph::views::deletion_graph::GraphWithDeletions;
 use crate::graph::save::window_graph_and_save;
-use crate::utils::{calculate_file_batch_size, create_windows, get_closest_file_start};
+use crate::utils::{get_file_bounds, get_windows_and_next};
 
 pub fn load_event_files(
     file_paths: Vec<String>,
@@ -22,73 +22,78 @@ pub fn load_event_files(
     start: u32,
     end: u32
 ) -> Result<Vec<String>> {
-    let total_files = file_paths.len() as u32;
-    let batch_count_files = calculate_file_batch_size(180, window_size, overlap, total_files);
-    let windowed_paths = create_windows(file_paths, batch_count_files as usize);
+    let file_bounds = get_file_bounds(start, end);
+    let mut running_start = start;
+    let mut running_window_idx = 0;
+    let mut running_graph = GraphWithDeletions::new();
 
-    let maybe_loaded_files: Result<Vec<Vec<String>>> = windowed_paths
-        .par_iter()
+    let maybe_window_files: Result<Vec<Vec<String>>> = file_paths
+        .iter()
         .enumerate()
-        .map(move |(batch_idx, file_batch)| {
-            let file_start = get_closest_file_start(start);
-            load_event_file_window(
-                file_batch,
-                batch_idx as u32,
-                batch_count_files,
+        .map(|(idx, file_path)|
+            init_load_event_file(
+                idx,
+                file_path,
+                &file_bounds,
                 connection_prop,
+                end,
+                &mut running_start,
+                &mut running_window_idx,
                 window_size,
                 overlap,
-                file_start,
-                start,
-                end
+                &mut running_graph
             )
-        })
-        .collect();
+        ).collect();
 
-    let loaded_files = maybe_loaded_files?;
+    let window_files = maybe_window_files.unwrap();
 
-    Ok(loaded_files.concat())
+    Ok(window_files.concat())
 }
 
-pub fn load_event_file_window(
-    file_batch: &Vec<String>,
-    batch_idx: u32,
-    batch_count_files: u32,
+fn init_load_event_file(
+    file_idx: usize,
+    file_path: &String,
+    file_bounds: &Vec<(u32, u32)>,
     connection_prop: &ConnectionProp,
+    end: u32,
+    running_start: &mut u32,
+    running_window_idx: &mut u32,
     window_size: u32,
     overlap: u32,
-    file_start: u32,
-    start: u32,
-    end: u32
+    graph: &mut GraphWithDeletions
 ) -> Result<Vec<String>> {
-    println!("Starting to load batch {} of size {}, files are {:?}", batch_idx, file_batch.len(), file_batch);
-
-    let graph = Graph::new();
-    let graph_mutex = Mutex::new(&graph);
-
-    file_batch
-        .par_iter()
-        .try_for_each(|file_path|
-            load_event_file(file_path, &graph_mutex, connection_prop)
-        )?;
-
-    let current_window_files = window_graph_and_save(
-        &graph,
+    println!("Graph number of vertices before {}", graph.count_vertices());
+    let (file_start, file_end) = file_bounds[file_idx];
+    let current_end = min(file_end, end);
+    let result = get_windows_and_next(
+        *running_start,
+        current_end,
         window_size,
-        overlap,
-        batch_idx,
-        batch_count_files,
-        file_start,
-        start,
-        end
-    )?;
+        overlap
+    );
+    let windows = result.0;
+    *running_start = result.1;
 
-    Ok(current_window_files)
+    let graph_mutex = Mutex::new(&*graph);
+    load_event_file(file_path, &graph_mutex, connection_prop)?;
+
+    let window_result = window_graph_and_save(
+        &*graph,
+        &windows,
+        file_start,
+        file_end,
+        *running_window_idx)?;
+
+    *running_window_idx = *running_window_idx + (windows.len() as u32);
+    let window_files = window_result.0;
+    *graph = window_result.1;
+
+    Ok(window_files)
 }
 
 pub fn load_event_file(
     file_path: &String,
-    graph_mutex: &Mutex<&Graph>,
+    graph_mutex: &Mutex<&GraphWithDeletions>,
     connection_prop: &ConnectionProp) -> Result<()> {
 
     println!("Extracting file {} in /tmp directory", file_path);
@@ -117,7 +122,7 @@ pub fn load_event_file(
 
 pub fn populate_graph(
     file_path: &String,
-    graph_mutex: &Mutex<&Graph>,
+    graph_mutex: &Mutex<&GraphWithDeletions>,
     connection_prop: &ConnectionProp
 ) -> Result<()> {
     println!("Starting to load the file {}", file_path);

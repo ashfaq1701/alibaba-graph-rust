@@ -37,30 +37,6 @@ pub fn extract_gz_file(file_path: &String, dest_path: &String) -> Result<(), &'s
     Ok(())
 }
 
-pub fn calculate_file_batch_size(s: u32, w: u32, o: u32, total: u32) -> u32 {
-    for batches in 1..=total {
-        let remainder = (s * batches - o) % (w - o);
-        if remainder == 0 {
-            return batches;
-        }
-    }
-
-    total
-}
-
-pub fn create_windows<T>(data: Vec<T>, window_size: usize) -> Vec<Vec<T>>
-    where T: Clone,
-{
-    let mut windows = Vec::new();
-
-    for i in (0..data.len()).step_by(window_size) {
-        let window: Vec<T> = data[i..].iter().cloned().take(window_size).collect();
-        windows.push(window);
-    }
-
-    windows
-}
-
 pub fn get_int_option_value(options: &HashMap<&str, &str>, k: &str) -> Option<u32> {
     match options.get(k) {
         Some(str_value) => {
@@ -80,37 +56,29 @@ pub fn get_int_option_value(options: &HashMap<&str, &str>, k: &str) -> Option<u3
     }
 }
 
-pub fn get_windows(
-    batch_idx: u32,
-    batch_count_files: u32,
-    window_size: u32,
-    overlap: u32,
-    file_start: u32,
-    start: u32,
-    end: u32
-) -> Vec<(u32, u32)> {
-    let batch_start = file_start + 180 * batch_count_files * batch_idx;
-    let batch_end = batch_start + 180 * batch_count_files;
+pub fn get_windows_and_next(start: u32, end: u32, window: u32, overlap: u32) -> (Vec<(u32, u32)>, u32) {
     let mut windows: Vec<(u32, u32)> = Vec::new();
-    let mut current = batch_start;
+    let mut current = start;
 
-    while current + window_size <= batch_end && current + window_size <= end {
-        if current < start {
-            current = current + window_size - overlap;
-            continue
-        }
-
-        windows.push((current, current + window_size - 1));
-        current = current + window_size - overlap;
+    while current + window <= end {
+        windows.push((current, current + window));
+        current = current + window - overlap;
     }
 
-    windows
+    (windows, current)
 }
 
-pub fn get_window_count(dataset_size: u32, window_size: u32, overlap: u32) -> u32 {
-    ((dataset_size - window_size) as f64 / (window_size - overlap) as f64).ceil() as u32 + 1
-}
+pub fn get_file_bounds(start: u32, end: u32) -> Vec<(u32, u32)> {
+    let file_start = (start / 180) * 180;
+    let file_end = (end / 180) * 180;
 
-pub fn get_closest_file_start(start: u32) -> u32 {
-    start - (start % 180)
+    let mut file_bounds: Vec<(u32, u32)> = Vec::new();
+    let mut current = file_start;
+
+    while current + 180 <= file_end {
+        file_bounds.push((current, current + 180));
+        current += 180;
+    }
+
+    file_bounds
 }
