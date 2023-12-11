@@ -7,9 +7,9 @@ use rayon::prelude::*;
 pub fn window_graph_and_save(
     graph: &GraphWithDeletions,
     windows: &Vec<(u32, u32)>,
-    file_start: u32,
     file_end: u32,
-    start_idx: u32
+    start_idx: u32,
+    beginning_ptr_for_next: u32
 ) -> Result<(Vec<String>, GraphWithDeletions)> {
 
     let maybe_loaded_window_files: Result<Vec<String>> = windows
@@ -27,16 +27,9 @@ pub fn window_graph_and_save(
         .collect();
 
     let loaded_window_files=  maybe_loaded_window_files?;
-    let maybe_last_window = windows.last();
-
-    let last_end = if let Some(last_window) = maybe_last_window {
-        last_window.1
-    } else {
-        file_start
-    };
 
     let next_graph = graph.window(
-        (last_end * 1000) as i64,
+        (beginning_ptr_for_next * 1000) as i64,
         (file_end * 1000) as i64
     )
         .materialize()

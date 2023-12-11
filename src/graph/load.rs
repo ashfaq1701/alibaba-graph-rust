@@ -63,7 +63,7 @@ fn init_load_event_file(
     graph: &mut GraphWithDeletions
 ) -> Result<Vec<String>> {
     println!("Graph number of vertices before {}", graph.count_vertices());
-    let (file_start, file_end) = file_bounds[file_idx];
+    let (_, file_end) = file_bounds[file_idx];
     let current_end = min(file_end, end);
     let result = get_windows_and_next(
         *running_start,
@@ -80,9 +80,10 @@ fn init_load_event_file(
     let window_result = window_graph_and_save(
         &*graph,
         &windows,
-        file_start,
         file_end,
-        *running_window_idx)?;
+        *running_window_idx,
+        *running_start
+    )?;
 
     *running_window_idx = *running_window_idx + (windows.len() as u32);
     let window_files = window_result.0;
