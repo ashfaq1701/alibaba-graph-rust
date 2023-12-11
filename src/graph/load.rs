@@ -12,7 +12,7 @@ use anyhow::Result;
 use raphtory::core::ArcStr;
 use raphtory::db::graph::views::deletion_graph::GraphWithDeletions;
 use crate::graph::save::window_graph_and_save;
-use crate::utils::{get_file_bounds, get_windows_and_next};
+use crate::utils::{get_file_bounds, get_windows_and_next_file_start_ptr};
 
 pub fn load_event_files(
     file_paths: Vec<String>,
@@ -65,7 +65,7 @@ fn init_load_event_file(
     println!("Graph number of vertices before {}", graph.count_vertices());
     let (_, file_end) = file_bounds[file_idx];
     let current_end = min(file_end, end);
-    let result = get_windows_and_next(
+    let result = get_windows_and_next_file_start_ptr(
         *running_start,
         current_end,
         window_size,

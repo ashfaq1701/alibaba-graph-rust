@@ -56,7 +56,12 @@ pub fn get_int_option_value(options: &HashMap<&str, &str>, k: &str) -> Option<u3
     }
 }
 
-pub fn get_windows_and_next(start: u32, end: u32, window: u32, overlap: u32) -> (Vec<(u32, u32)>, u32) {
+pub fn get_windows_and_next_file_start_ptr(
+    start: u32,
+    end: u32,
+    window: u32,
+    overlap: u32
+) -> (Vec<(u32, u32)>, u32) {
     let mut windows: Vec<(u32, u32)> = Vec::new();
     let mut current = start;
 
