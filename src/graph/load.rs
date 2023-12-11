@@ -62,7 +62,7 @@ fn init_load_event_file(
     overlap: u32,
     graph: &mut GraphWithDeletions
 ) -> Result<Vec<String>> {
-    println!("Graph number of vertices before {}", graph.count_vertices());
+    println!("{} Prior number of vertices - {}", file_path, graph.count_vertices());
     let (_, file_end) = file_bounds[file_idx];
     let current_end = min(file_end, end);
     let result = get_windows_and_next_file_start_ptr(
