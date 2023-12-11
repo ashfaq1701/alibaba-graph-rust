@@ -13,6 +13,7 @@ use raphtory::core::ArcStr;
 use raphtory::db::graph::views::deletion_graph::GraphWithDeletions;
 use crate::graph::save::window_graph_and_save;
 use crate::utils::{get_file_bounds, get_windows_and_next_file_start_ptr};
+use log::{info};
 
 pub fn load_event_files(
     file_paths: Vec<String>,
@@ -62,7 +63,7 @@ fn init_load_event_file(
     overlap: u32,
     graph: &mut GraphWithDeletions
 ) -> Result<Vec<String>> {
-    println!("{} Prior number of vertices - {}", file_path, graph.count_vertices());
+    info!("{} Prior number of vertices - {}", file_path, graph.count_vertices());
     let (_, file_end) = file_bounds[file_idx];
     let current_end = min(file_end, end);
     let result = get_windows_and_next_file_start_ptr(
@@ -97,7 +98,7 @@ pub fn load_event_file(
     graph_mutex: &Mutex<&GraphWithDeletions>,
     connection_prop: &ConnectionProp) -> Result<()> {
 
-    println!("Extracting file {} in /tmp directory", file_path);
+    info!("Extracting file {} in /tmp directory", file_path);
     utils::extract_gz_file(file_path, &"/tmp".to_string())
         .expect("Error in extracting file");
 
@@ -108,14 +109,14 @@ pub fn load_event_file(
 
     match populate_graph(&dst_file_path, graph_mutex, connection_prop) {
         Ok(_) => {
-            println!("Loaded file {}", dst_file_path);
+            info!("Loaded file {}", dst_file_path);
         }
         Err(err) => {
-            println!("Error happened while populating graph - {}", err);
+            info!("Error happened while populating graph - {}", err);
         }
     };
 
-    println!("Deleting file {}", dst_file_path);
+    info!("Deleting file {}", dst_file_path);
     fs::remove_file(&dst_file_path)?;
 
     Ok(())
@@ -126,7 +127,7 @@ pub fn populate_graph(
     graph_mutex: &Mutex<&GraphWithDeletions>,
     connection_prop: &ConnectionProp
 ) -> Result<()> {
-    println!("Starting to load the file {}", file_path);
+    info!("Starting to load the file {}", file_path);
     let file = File::open(file_path)?;
 
     let mut rdr = ReaderBuilder::new().from_reader(file);

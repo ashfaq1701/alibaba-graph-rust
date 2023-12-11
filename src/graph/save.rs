@@ -3,6 +3,7 @@ use raphtory::prelude::{GraphViewOps, TimeOps};
 use anyhow::Result;
 use raphtory::db::graph::views::deletion_graph::GraphWithDeletions;
 use rayon::prelude::*;
+use log::{info};
 
 pub fn window_graph_and_save(
     graph: &GraphWithDeletions,
@@ -46,7 +47,7 @@ pub fn create_and_save_window(
     end: &u32,
     window_idx: &u32
 ) -> Result<String> {
-    println!("Started loading window - {} ({}, {})", window_idx, start, end);
+    info!("Started loading window - {} ({}, {})", window_idx, start, end);
 
     let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let file_name = format!("window_{}_{}_{}", window_idx, start, end);
@@ -60,10 +61,10 @@ pub fn create_and_save_window(
 
     match materialized_graph_window.save_to_file(&dest_path) {
         Ok(_) => {
-            println!("Saved window - {} ({}, {}) at {}", window_idx, start, end, &dest_path);
+            info!("Saved window - {} ({}, {}) at {}", window_idx, start, end, &dest_path);
         }
         Err(e) => {
-            println!("Error while saving window - {} ({}, {}) - {}", window_idx, start, end, e);
+            info!("Error while saving window - {} ({}, {}) - {}", window_idx, start, end, e);
         }
     };
     Ok(dest_path)

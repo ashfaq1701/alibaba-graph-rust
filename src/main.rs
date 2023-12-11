@@ -6,9 +6,13 @@ use std::env;
 use std::collections::HashMap;
 use crate::data::structs::ConnectionProp;
 use crate::utils::get_int_option_value;
+use log::{info, error};
 use anyhow::{anyhow, Result};
 
 fn main() {
+    env::set_var("RUST_LOG", "info");
+    env_logger::init();
+
     let command = env::args().nth(1);
     let args: Vec<String> = env::args().collect();
     let mut options: HashMap<&str, &str> = HashMap::new();
@@ -17,7 +21,7 @@ fn main() {
             .split("=")
             .collect();
         if parts.len() != 2 {
-            eprintln!("Wrong option passed {}", arg);
+            error!("Wrong option passed {}", arg);
             continue;
         }
 
@@ -28,18 +32,18 @@ fn main() {
         Some("load") => {
             match run_get_data(&options) {
                 Ok(_) => {
-                    println!("Downloaded data successfully");
+                    info!("Downloaded data successfully");
                 }
                 Err(msg) => {
-                    eprintln!("Error running downloader {}", msg);
+                    error!("Error running downloader {}", msg);
                 }
             }
         }
         Some(_) => {
-            eprintln!("Invalid command");
+            error!("Invalid command");
         }
         _ => {
-            eprintln!("No command");
+            error!("No command");
         }
     }
 }
@@ -153,7 +157,7 @@ fn run_get_data(options: &HashMap<&str, &str>) -> Result<()> {
                 &connection_prop
             )?;
 
-            println!("Windowed graphs are stored in the following files {:?}", loaded_window_files);
+            info!("Windowed graphs are stored in the following files {:?}", loaded_window_files);
 
             Ok(())
         }

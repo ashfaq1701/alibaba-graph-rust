@@ -8,6 +8,7 @@ use crate::graph;
 use anyhow::Result;
 use rayon::prelude::*;
 use super::structs::{ConnectionProp, TimeBreakdown};
+use log::{info};
 
 pub fn load_files<'a>(
     start: u32,
@@ -61,7 +62,7 @@ pub fn download_raw_files<'a>(
             let dest_file = format!("{}/{}", &dest_dir, file_name);
 
             if let Ok(_) = fs::metadata(&dest_file) {
-                println!("File {} already exists", file_name);
+                info!("File {} already exists", file_name);
             } else {
                 download::download(&file_url, &dest_file)?;
             }

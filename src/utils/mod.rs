@@ -3,6 +3,7 @@ use std::fs::File;
 use tar::Archive;
 use flate2::read::GzDecoder;
 use crate::data::structs::TimeBreakdown;
+use log::{error};
 
 pub fn get_time_breakdown<'a>(time: u32) -> TimeBreakdown {
     let day = time / (24 * 60 * 60);
@@ -45,7 +46,7 @@ pub fn get_int_option_value(options: &HashMap<&str, &str>, k: &str) -> Option<u3
                     Some(value)
                 }
                 _ => {
-                    eprintln!("Couldn't parse integer value from options");
+                    error!("Couldn't parse integer value from options");
                     None
                 }
             }
