@@ -1,14 +1,12 @@
 extern crate anyhow;
 
 use std::fs;
-use std::ops::Deref;
-use threadpool::ThreadPool;
 use std::path::PathBuf;
 use super::download;
-use std::sync::{Arc, Mutex};
 use crate::utils;
 use crate::graph;
 use anyhow::Result;
+use rayon::prelude::*;
 use super::structs::{ConnectionProp, TimeBreakdown};
 
 pub fn load_files<'a>(
@@ -23,7 +21,7 @@ pub fn load_files<'a>(
     let mut downloaded_files = download_raw_files(
         &start_time_breakdown,
         &end_time_breakdown
-    );
+    )?;
     downloaded_files.sort();
     let loaded_window_files = graph::load::load_event_files(
         downloaded_files,
@@ -39,7 +37,9 @@ pub fn load_files<'a>(
 
 pub fn download_raw_files<'a>(
     start_time_breakdown: &'a TimeBreakdown,
-    end_time_breakdown: &'a TimeBreakdown) -> Vec<String> {
+    end_time_breakdown: &'a TimeBreakdown
+) -> Result<Vec<String>> {
+
     let start_minute = get_callgraph_minute_value(start_time_breakdown);
     let mut end_minute = get_callgraph_minute_value(end_time_breakdown);
     if end_time_breakdown.second > 0 {
@@ -49,48 +49,29 @@ pub fn download_raw_files<'a>(
     let start_idx = start_minute / 3;
     let end_idx = (f64::ceil(end_minute as f64 / 3.0) as u32) - 1;
 
-    let base_url = Arc::new("https://aliopentrace.oss-cn-beijing.aliyuncs.com/v2022MicroservicesTraces/CallGraph");
+    let base_url = "https://aliopentrace.oss-cn-beijing.aliyuncs.com/v2022MicroservicesTraces/CallGraph".to_string();
     let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let dest_dir = Arc::new(format!("{}/data/raw", pathbuf.to_str().unwrap()));
+    let dest_dir = format!("{}/data/raw", pathbuf.to_str().unwrap());
 
-    let downloaded_file_paths = Arc::new(Mutex::new(Vec::<String>::new()));
-
-    let n_workers = 5;
-    let pool = ThreadPool::new(n_workers);
-
-    for i in start_idx..=end_idx {
-
-        let shared_base_url = Arc::clone(&base_url);
-        let shared_dest_dir = Arc::clone(&dest_dir);
-        let shared_downloaded_file_paths = Arc::clone(&downloaded_file_paths);
-
-        pool.execute(move || {
+    let maybe_downloaded_files: Result<Vec<String>> = (start_idx..=end_idx)
+        .into_par_iter()
+        .map(|i: u32| {
             let file_name = format!("CallGraph_{}.tar.gz", i);
-            let file_url = format!("{}/{}", shared_base_url.deref(), file_name);
-            let dest_file = format!("{}/{}", shared_dest_dir.deref(), file_name);
-
-            let mut unlocked_paths = shared_downloaded_file_paths.lock().unwrap();
+            let file_url = format!("{}/{}", &base_url, file_name);
+            let dest_file = format!("{}/{}", &dest_dir, file_name);
 
             if let Ok(_) = fs::metadata(&dest_file) {
                 println!("File {} already exists", file_name);
-                unlocked_paths.push(dest_file);
             } else {
-                match download::download(&file_url, &dest_file) {
-                    Ok(_) => {
-                        unlocked_paths.push(dest_file);
-                    }
-                    _ => {
-                        eprintln!("Error in downloading {}", file_name);
-                    }
-                }
+                download::download(&file_url, &dest_file)?;
             }
-        });
-    };
 
-    pool.join();
+            Ok(dest_file)
+        })
+        .collect();
 
-    let downloaded_files = downloaded_file_paths.lock().unwrap().clone();
-    downloaded_files
+    let downloaded_files = maybe_downloaded_files?;
+    Ok(downloaded_files)
 }
 
 pub fn get_callgraph_minute_value(time_breakdown: &TimeBreakdown) -> u32 {
