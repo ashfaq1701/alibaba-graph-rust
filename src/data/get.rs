@@ -23,7 +23,35 @@ pub fn load_files<'a>(
         &start_time_breakdown,
         &end_time_breakdown
     )?;
-    downloaded_files.sort();
+
+    downloaded_files.sort_by(|a, b| {
+        let a_parts: Vec<&str> = a.split("_").collect();
+        let a1 = a_parts[1].to_string();
+        let a1_parts: Vec<&str> = a1.split(".").collect();
+        let a_i = match a1_parts[0].parse::<u32>(){
+            Ok(i) => {
+                i
+            }
+            _ => {
+                0
+            }
+        };
+
+        let b_parts: Vec<&str> = b.split("_").collect();
+        let b1 = b_parts[1].to_string();
+        let b1_parts: Vec<&str> = b1.split(".").collect();
+        let b_i = match b1_parts[0].parse::<u32>(){
+            Ok(i) => {
+                i
+            }
+            _ => {
+                0
+            }
+        };
+
+        a_i.cmp(&b_i)
+    });
+
     let loaded_window_files = graph::load::load_event_files(
         downloaded_files,
         window_size,

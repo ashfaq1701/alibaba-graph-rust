@@ -1,17 +1,17 @@
 use std::path::PathBuf;
 use raphtory::prelude::{GraphViewOps, TimeOps};
 use anyhow::Result;
-use raphtory::db::graph::views::deletion_graph::GraphWithDeletions;
 use rayon::prelude::*;
 use log::{info};
+use raphtory::db::api::view::internal::MaterializedGraph;
 
 pub fn window_graph_and_save(
-    graph: &GraphWithDeletions,
+    graph: &MaterializedGraph,
     windows: &Vec<(u32, u32)>,
     file_end: u32,
     start_idx: u32,
     beginning_ptr_for_next: u32
-) -> Result<(Vec<String>, GraphWithDeletions)> {
+) -> Result<(Vec<String>, MaterializedGraph)> {
 
     let maybe_loaded_window_files: Result<Vec<String>> = windows
         .par_iter()
@@ -33,16 +33,13 @@ pub fn window_graph_and_save(
         (beginning_ptr_for_next * 1000) as i64,
         (file_end * 1000) as i64
     )
-        .materialize()
-        .unwrap()
-        .into_persistent()
-        .unwrap();
+        .materialize()?;
 
     Ok((loaded_window_files, next_graph))
 }
 
 pub fn create_and_save_window(
-    graph: &GraphWithDeletions,
+    graph: &MaterializedGraph,
     start: &u32,
     end: &u32,
     window_idx: &u32
@@ -57,7 +54,7 @@ pub fn create_and_save_window(
         (*start * 1000) as i64,
         (*end * 1000) as i64
     );
-    let materialized_graph_window = graph_window.materialize().unwrap();
+    let materialized_graph_window = graph_window.materialize()?;
 
     match materialized_graph_window.save_to_file(&dest_path) {
         Ok(_) => {

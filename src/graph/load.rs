@@ -10,10 +10,10 @@ use crate::utils;
 use crate::graph::structs::{Trace};
 use anyhow::Result;
 use raphtory::core::ArcStr;
-use raphtory::db::graph::views::deletion_graph::GraphWithDeletions;
 use crate::graph::save::window_graph_and_save;
 use crate::utils::{get_file_bounds, get_windows_and_next_file_start_ptr};
 use log::{info};
+use raphtory::db::api::view::internal::MaterializedGraph;
 
 pub fn load_event_files(
     file_paths: Vec<String>,
@@ -26,7 +26,7 @@ pub fn load_event_files(
     let file_bounds = get_file_bounds(start, end);
     let mut running_start = start;
     let mut running_window_idx = 0;
-    let mut running_graph = GraphWithDeletions::new();
+    let mut running_graph = MaterializedGraph::EventGraph(Graph::new());
 
     let maybe_window_files: Result<Vec<Vec<String>>> = file_paths
         .iter()
@@ -61,7 +61,7 @@ fn init_load_event_file(
     running_window_idx: &mut u32,
     window_size: u32,
     overlap: u32,
-    graph: &mut GraphWithDeletions
+    graph: &mut MaterializedGraph
 ) -> Result<Vec<String>> {
     info!("{} Prior number of vertices - {}", file_path, graph.count_vertices());
     let (_, file_end) = file_bounds[file_idx];
@@ -95,7 +95,7 @@ fn init_load_event_file(
 
 pub fn load_event_file(
     file_path: &String,
-    graph_mutex: &Mutex<&GraphWithDeletions>,
+    graph_mutex: &Mutex<&MaterializedGraph>,
     connection_prop: &ConnectionProp) -> Result<()> {
 
     info!("Extracting file {} in /tmp directory", file_path);
@@ -124,7 +124,7 @@ pub fn load_event_file(
 
 pub fn populate_graph(
     file_path: &String,
-    graph_mutex: &Mutex<&GraphWithDeletions>,
+    graph_mutex: &Mutex<&MaterializedGraph>,
     connection_prop: &ConnectionProp
 ) -> Result<()> {
     info!("Starting to load the file {}", file_path);
