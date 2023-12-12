@@ -6,7 +6,7 @@ use std::{fs::File, io::copy};
 use anyhow::{anyhow, Result};
 
 pub fn download(url: &str, destination: &str) -> Result<()> {
-    info!("Staring download of {} to the {}", url, destination);
+    info!("Starting download of {} to the {}", url, destination);
     let maybe_response = reqwest::blocking::get(url);
 
     let mut response = if let Ok(resp) = maybe_response {
