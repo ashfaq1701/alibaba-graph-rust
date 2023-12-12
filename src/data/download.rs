@@ -3,22 +3,29 @@ extern crate anyhow;
 use log::{info, error};
 
 use std::{fs::File, io::copy};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 pub fn download(url: &str, destination: &str) -> Result<()> {
     info!("Staring download of {} to the {}", url, destination);
-    let mut response = reqwest::blocking::get(url)?;
+    let maybe_response = reqwest::blocking::get(url);
+
+    let mut response = if let Ok(resp) = maybe_response {
+        resp
+    } else {
+        return Err(anyhow!("Failed to get response of {}", url));
+    };
 
     if !response.status().is_success() {
         error!("Failed to download file. Status code: {}", response.status());
-        return Ok(());
+        return Err(anyhow!("Failed to download {}", url));
     }
 
     let mut file = File::create(destination)?;
 
-    copy(&mut response, &mut file)?;
-
-    info!("File downloaded successfully to: {}", destination);
-
-    Ok(())
+    if let Ok(_) = copy(&mut response, &mut file) {
+        info!("File downloaded successfully to: {}", destination);
+        Ok(())
+    } else {
+        Err(anyhow!("Failed to copy response from {} to {}", url, destination))
+    }
 }
