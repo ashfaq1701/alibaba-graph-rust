@@ -147,26 +147,17 @@ fn run_get_data(options: &HashMap<&str, &str>) -> Result<()> {
         return Err(anyhow!("Invalid start or end parameter passed"));
     }
 
-    match (get_int_option_value(options, "window_size"), get_int_option_value(options, "overlap")) {
-        (Some(window_size), Some(overlap)) => {
-            let loaded_window_files = data::get::load_files(
-                start_time,
-                end_time,
-                window_size,
-                overlap,
-                &connection_prop
-            )?;
+    if let Some(window_size) = get_int_option_value(options, "window_size") {
+        let loaded_window_files = data::get::load_files(
+            start_time,
+            end_time,
+            window_size,
+            &connection_prop
+        )?;
 
-            info!("Windowed graphs are stored in the following files {:?}", loaded_window_files);
-
-            Ok(())
-        }
-        (Some(window_size), None) => {
-            data::get::load_files(start_time, end_time, window_size, 0, &connection_prop)?;
-            Ok(())
-        }
-        _ => {
-            Err(anyhow!("Window size is a required parameter"))
-        }
+        info!("Windowed graphs are stored in the following files {:?}", loaded_window_files);
+        Ok(())
+    } else {
+        Err(anyhow!("Window size is a required parameter"))
     }
 }

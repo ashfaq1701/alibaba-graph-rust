@@ -1,17 +1,14 @@
 use std::path::PathBuf;
-use raphtory::prelude::{GraphViewOps, TimeOps};
+use raphtory::prelude::{Graph, GraphViewOps, TimeOps};
 use anyhow::Result;
 use rayon::prelude::*;
 use log::{info};
-use raphtory::db::api::view::internal::MaterializedGraph;
 
 pub fn window_graph_and_save(
-    graph: &MaterializedGraph,
+    graph: &Graph,
     windows: &Vec<(u32, u32)>,
-    file_end: u32,
-    start_idx: u32,
-    beginning_ptr_for_next: u32
-) -> Result<(Vec<String>, MaterializedGraph)> {
+    start_idx: u32
+) -> Result<Vec<String>> {
 
     let maybe_loaded_window_files: Result<Vec<String>> = windows
         .par_iter()
@@ -29,17 +26,11 @@ pub fn window_graph_and_save(
 
     let loaded_window_files=  maybe_loaded_window_files?;
 
-    let next_graph = graph.window(
-        (beginning_ptr_for_next * 1000) as i64,
-        (file_end * 1000) as i64
-    )
-        .materialize()?;
-
-    Ok((loaded_window_files, next_graph))
+    Ok(loaded_window_files)
 }
 
 pub fn create_and_save_window(
-    graph: &MaterializedGraph,
+    graph: &Graph,
     start: &u32,
     end: &u32,
     window_idx: &u32

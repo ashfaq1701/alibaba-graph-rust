@@ -14,7 +14,6 @@ pub fn load_files<'a>(
     start: u32,
     end: u32,
     window_size: u32,
-    overlap: u32,
     connection_prop: &ConnectionProp
 ) -> Result<Vec<String>> {
     let start_time_breakdown = utils::get_time_breakdown(start);
@@ -55,7 +54,6 @@ pub fn load_files<'a>(
     let loaded_window_files = graph::load::load_event_files(
         downloaded_files,
         window_size,
-        overlap,
         connection_prop,
         start,
         end

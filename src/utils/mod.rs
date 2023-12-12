@@ -57,21 +57,28 @@ pub fn get_int_option_value(options: &HashMap<&str, &str>, k: &str) -> Option<u3
     }
 }
 
-pub fn get_windows_and_next_file_start_ptr(
+pub fn get_windows(
     start: u32,
     end: u32,
-    window: u32,
-    overlap: u32
-) -> (Vec<(u32, u32)>, u32) {
+    window: u32
+) -> Vec<(u32, u32)> {
     let mut windows: Vec<(u32, u32)> = Vec::new();
     let mut current = start;
 
     while current + window <= end {
         windows.push((current, current + window));
-        current = current + window - overlap;
+        current = current + window;
     }
 
-    (windows, current)
+    windows
+}
+
+pub fn get_window_count(
+    start: u32,
+    end: u32,
+    window: u32
+) -> u32 {
+    (end - start) / window
 }
 
 pub fn get_file_bounds(start: u32, end: u32) -> Vec<(u32, u32)> {

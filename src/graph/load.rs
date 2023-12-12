@@ -11,40 +11,66 @@ use crate::graph::structs::{Trace};
 use anyhow::Result;
 use raphtory::core::ArcStr;
 use crate::graph::save::window_graph_and_save;
-use crate::utils::{get_file_bounds, get_windows_and_next_file_start_ptr};
+use crate::utils::{get_file_bounds, get_window_count, get_windows};
 use log::{info};
-use raphtory::db::api::view::internal::MaterializedGraph;
+use rayon::prelude::*;
 
 pub fn load_event_files(
     file_paths: Vec<String>,
     window_size: u32,
-    overlap: u32,
     connection_prop: &ConnectionProp,
     start: u32,
     end: u32
 ) -> Result<Vec<String>> {
     let file_bounds = get_file_bounds(start, end);
-    let mut running_start = start;
-    let mut running_window_idx = 0;
-    let mut running_graph = MaterializedGraph::EventGraph(Graph::new());
+
+    let files_count = file_paths.len();
+    let first_file_window_count = get_window_count(
+        start,
+        (start / 180) * 180 + 180,
+        window_size
+    );
+
+    let window_count = get_window_count(
+        0,
+        180,
+        window_size
+    );
 
     let maybe_window_files: Result<Vec<Vec<String>>> = file_paths
-        .iter()
+        .par_iter()
         .enumerate()
-        .map(|(idx, file_path)|
+        .map(|(idx, file_path)| {
+            let file_bound = file_bounds[idx];
+            let (file_start, file_end) = file_bound;
+
+            let current_file_start = if idx == 0 {
+                min(file_start, start)
+            } else {
+                file_start
+            };
+
+            let current_file_end = if idx == files_count - 1 {
+                min(end, file_end)
+            } else {
+                file_end
+            };
+
+            let starting_idx = if idx == 0 {
+                0
+            } else {
+                first_file_window_count + (idx - 1) as u32 * window_count
+            };
+
             init_load_event_file(
-                idx,
                 file_path,
-                &file_bounds,
                 connection_prop,
-                end,
-                &mut running_start,
-                &mut running_window_idx,
-                window_size,
-                overlap,
-                &mut running_graph
+                current_file_start,
+                current_file_end,
+                starting_idx,
+                window_size
             )
-        ).collect();
+        }).collect();
 
     let window_files = maybe_window_files.unwrap();
 
@@ -52,50 +78,35 @@ pub fn load_event_files(
 }
 
 fn init_load_event_file(
-    file_idx: usize,
     file_path: &String,
-    file_bounds: &Vec<(u32, u32)>,
     connection_prop: &ConnectionProp,
+    start: u32,
     end: u32,
-    running_start: &mut u32,
-    running_window_idx: &mut u32,
-    window_size: u32,
-    overlap: u32,
-    graph: &mut MaterializedGraph
+    starting_idx: u32,
+    window_size: u32
 ) -> Result<Vec<String>> {
-    info!("{} Prior number of vertices - {}", file_path, graph.count_vertices());
-    let (_, file_end) = file_bounds[file_idx];
-    let current_end = min(file_end, end);
-    let result = get_windows_and_next_file_start_ptr(
-        *running_start,
-        current_end,
-        window_size,
-        overlap
+    let windows = get_windows(
+        start,
+        end,
+        window_size
     );
-    let windows = result.0;
-    *running_start = result.1;
 
-    let graph_mutex = Mutex::new(&*graph);
+    let graph = Graph::new();
+    let graph_mutex = Mutex::new(&graph);
     load_event_file(file_path, &graph_mutex, connection_prop)?;
 
-    let window_result = window_graph_and_save(
-        &*graph,
+    let window_files = window_graph_and_save(
+        &graph,
         &windows,
-        file_end,
-        *running_window_idx,
-        *running_start
+        starting_idx
     )?;
-
-    *running_window_idx = *running_window_idx + (windows.len() as u32);
-    let window_files = window_result.0;
-    *graph = window_result.1;
 
     Ok(window_files)
 }
 
 pub fn load_event_file(
     file_path: &String,
-    graph_mutex: &Mutex<&MaterializedGraph>,
+    graph_mutex: &Mutex<&Graph>,
     connection_prop: &ConnectionProp) -> Result<()> {
 
     info!("Extracting file {} in /tmp directory", file_path);
@@ -124,7 +135,7 @@ pub fn load_event_file(
 
 pub fn populate_graph(
     file_path: &String,
-    graph_mutex: &Mutex<&MaterializedGraph>,
+    graph_mutex: &Mutex<&Graph>,
     connection_prop: &ConnectionProp
 ) -> Result<()> {
     info!("Starting to load the file {}", file_path);
