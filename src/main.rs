@@ -155,7 +155,7 @@ fn run_get_data(options: &HashMap<&str, &str>) -> Result<()> {
             &connection_prop
         )?;
 
-        info!("Windowed graphs are stored in the following files {:?}", loaded_window_files);
+        info!("Windowed graphs are stored in {} files.", loaded_window_files.len());
         Ok(())
     } else {
         Err(anyhow!("Window size is a required parameter"))
