@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use tar::Archive;
 use flate2::read::GzDecoder;
-use crate::data::structs::TimeBreakdown;
+use crate::data::structs::{TimeBreakdown, WindowIndexingType};
 use log::{error};
 
 pub fn get_time_breakdown<'a>(time: u32) -> TimeBreakdown {
@@ -94,4 +94,24 @@ pub fn get_file_bounds(start: u32, end: u32) -> Vec<(u32, u32)> {
     }
 
     file_bounds
+}
+
+pub fn get_starting_window_idx(
+    idx: usize,
+    first_file_window_count: u32,
+    window_count: u32,
+    import_start_time: u32,
+    indexing_type: &WindowIndexingType,
+    window_size: u32
+) -> u32 {
+    let offset_index = match indexing_type {
+        WindowIndexingType::FromZero => 0,
+        WindowIndexingType::CorrectSeq => import_start_time / window_size
+    };
+
+    if idx == 0 {
+        offset_index
+    } else {
+        offset_index + first_file_window_count + (idx - 1) as u32 * window_count
+    }
 }

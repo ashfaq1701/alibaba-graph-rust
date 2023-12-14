@@ -5,13 +5,13 @@ use std::fs::File;
 use std::path::Path;
 use std::sync::Mutex;
 use csv::ReaderBuilder;
-use crate::data::structs::ConnectionProp;
+use crate::data::structs::{ConnectionProp, WindowIndexingType};
 use crate::utils;
 use crate::graph::structs::{Trace};
 use anyhow::Result;
 use raphtory::core::ArcStr;
 use crate::graph::save::window_graph_and_save;
-use crate::utils::{get_file_bounds, get_window_count, get_windows};
+use crate::utils::{get_file_bounds, get_starting_window_idx, get_window_count, get_windows};
 use log::{info};
 use rayon::prelude::*;
 
@@ -19,6 +19,7 @@ pub fn load_event_files(
     file_paths: Vec<String>,
     window_size: u32,
     connection_prop: &ConnectionProp,
+    indexing_type: &WindowIndexingType,
     start: u32,
     end: u32
 ) -> Result<Vec<String>> {
@@ -56,11 +57,14 @@ pub fn load_event_files(
                 file_end
             };
 
-            let starting_idx = if idx == 0 {
-                0
-            } else {
-                first_file_window_count + (idx - 1) as u32 * window_count
-            };
+            let starting_idx = get_starting_window_idx(
+                idx,
+                first_file_window_count,
+                window_count,
+                start,
+                indexing_type,
+                window_size
+            );
 
             init_load_event_file(
                 file_path,

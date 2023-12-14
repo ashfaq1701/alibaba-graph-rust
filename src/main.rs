@@ -4,7 +4,7 @@ mod graph;
 
 use std::env;
 use std::collections::HashMap;
-use crate::data::structs::ConnectionProp;
+use crate::data::structs::{ConnectionProp, WindowIndexingType};
 use crate::utils::get_int_option_value;
 use log::{info, error};
 use anyhow::{anyhow, Result};
@@ -116,6 +116,16 @@ fn run_get_data(options: &HashMap<&str, &str>) -> Result<()> {
         ConnectionProp::MicroserviceId
     };
 
+    let indexing_type = if let Some(indexing_type_str) = options.get("window_indexing_type") {
+        if *indexing_type_str == "from_zero" {
+            WindowIndexingType::FromZero
+        } else {
+            WindowIndexingType::CorrectSeq
+        }
+    } else {
+        WindowIndexingType::CorrectSeq
+    };
+
     let start = data::structs::TimeBreakdown {
         day: start_day,
         hour: start_hour,
@@ -152,7 +162,8 @@ fn run_get_data(options: &HashMap<&str, &str>) -> Result<()> {
             start_time,
             end_time,
             window_size,
-            &connection_prop
+            &connection_prop,
+            &indexing_type
         )?;
 
         info!("Windowed graphs are stored in {} files.", loaded_window_files.len());

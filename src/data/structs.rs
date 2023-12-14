@@ -9,3 +9,8 @@ pub enum ConnectionProp {
     MicroserviceId,
     InstanceId
 }
+
+pub enum WindowIndexingType {
+    FromZero,
+    CorrectSeq
+}

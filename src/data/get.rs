@@ -7,14 +7,15 @@ use crate::utils;
 use crate::graph;
 use anyhow::Result;
 use rayon::prelude::*;
-use super::structs::{ConnectionProp, TimeBreakdown};
+use super::structs::{ConnectionProp, TimeBreakdown, WindowIndexingType};
 use log::{info};
 
 pub fn load_files<'a>(
     start: u32,
     end: u32,
     window_size: u32,
-    connection_prop: &ConnectionProp
+    connection_prop: &ConnectionProp,
+    indexing_type: &WindowIndexingType
 ) -> Result<Vec<String>> {
     let start_time_breakdown = utils::get_time_breakdown(start);
     let end_time_breakdown = utils::get_time_breakdown(end);
@@ -55,6 +56,7 @@ pub fn load_files<'a>(
         downloaded_files,
         window_size,
         connection_prop,
+        indexing_type,
         start,
         end
     )?;
