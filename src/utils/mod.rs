@@ -106,7 +106,7 @@ pub fn get_starting_window_idx(
 ) -> u32 {
     let offset_index = match indexing_type {
         WindowIndexingType::FromZero => 0,
-        WindowIndexingType::CorrectSeq => import_start_time / window_size
+        WindowIndexingType::SeqFromStart => import_start_time / window_size
     };
 
     if idx == 0 {

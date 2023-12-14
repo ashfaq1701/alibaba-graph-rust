@@ -12,5 +12,5 @@ pub enum ConnectionProp {
 
 pub enum WindowIndexingType {
     FromZero,
-    CorrectSeq
+    SeqFromStart
 }

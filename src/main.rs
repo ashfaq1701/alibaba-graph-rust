@@ -120,10 +120,10 @@ fn run_get_data(options: &HashMap<&str, &str>) -> Result<()> {
         if *indexing_type_str == "from_zero" {
             WindowIndexingType::FromZero
         } else {
-            WindowIndexingType::CorrectSeq
+            WindowIndexingType::SeqFromStart
         }
     } else {
-        WindowIndexingType::CorrectSeq
+        WindowIndexingType::SeqFromStart
     };
 
     let start = data::structs::TimeBreakdown {
