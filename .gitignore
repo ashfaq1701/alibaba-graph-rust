@@ -2,3 +2,4 @@
 *.iml
 target/
 data/raw/*.tar.gz
+.env.local

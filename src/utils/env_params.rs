@@ -1,4 +1,10 @@
 use std::env;
+use dotenv::from_filename;
+
+pub fn load_env_files() {
+    from_filename(".env").ok();
+    from_filename(".env.local").ok();
+}
 
 pub fn get_file_duration_in_seconds() -> u32 {
     let file_len_in_seconds_str = env::var("FILE_DURATION_IN_SECONDS")
