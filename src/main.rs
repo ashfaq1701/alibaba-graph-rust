@@ -8,8 +8,11 @@ use crate::data::structs::{ConnectionProp, WindowIndexingType};
 use crate::utils::get_int_option_value;
 use log::{info, error};
 use anyhow::{anyhow, Result};
+use dotenv::dotenv;
 
 fn main() {
+    dotenv().ok();
+
     env::set_var("RUST_LOG", "info");
     env_logger::init();
 

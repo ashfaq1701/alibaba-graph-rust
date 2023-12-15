@@ -12,6 +12,7 @@ use anyhow::Result;
 use raphtory::core::ArcStr;
 use crate::graph::save::window_graph_and_save;
 use crate::utils::{get_file_bounds, get_starting_window_idx, get_window_count, get_windows};
+use crate::utils::env_params::get_file_duration_in_seconds;
 use log::{info};
 use rayon::prelude::*;
 
@@ -24,17 +25,18 @@ pub fn load_event_files(
     end: u32
 ) -> Result<Vec<String>> {
     let file_bounds = get_file_bounds(start, end);
+    let file_duration = get_file_duration_in_seconds();
 
     let files_count = file_paths.len();
     let first_file_window_count = get_window_count(
         start,
-        (start / 180) * 180 + 180,
+        (start / file_duration) * file_duration + file_duration,
         window_size
     );
 
     let window_count = get_window_count(
         0,
-        180,
+        file_duration,
         window_size
     );
 

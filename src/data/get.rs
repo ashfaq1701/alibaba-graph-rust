@@ -9,6 +9,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use super::structs::{ConnectionProp, TimeBreakdown, WindowIndexingType};
 use log::{info};
+use utils::env_params::get_raw_trace_directory;
 
 pub fn load_files<'a>(
     start: u32,
@@ -79,8 +80,14 @@ pub fn download_raw_files<'a>(
     let end_idx = (f64::ceil(end_minute as f64 / 3.0) as u32) - 1;
 
     let base_url = "https://aliopentrace.oss-cn-beijing.aliyuncs.com/v2022MicroservicesTraces/CallGraph".to_string();
-    let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let dest_dir = format!("{}/data/raw", pathbuf.to_str().unwrap());
+
+    let dest_dir = match get_raw_trace_directory() {
+        Some(raw_dir) => raw_dir,
+        _ => {
+            let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            format!("{}/data/raw", pathbuf.to_str().unwrap())
+        }
+    };
 
     let maybe_downloaded_files: Result<Vec<String>> = (start_idx..=end_idx)
         .into_par_iter()

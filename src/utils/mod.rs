@@ -1,9 +1,13 @@
+pub mod env_params;
+
 use std::collections::HashMap;
 use std::fs::File;
 use tar::Archive;
 use flate2::read::GzDecoder;
 use crate::data::structs::{TimeBreakdown, WindowIndexingType};
 use log::{error};
+use anyhow::Result;
+use crate::utils::env_params::get_file_duration_in_seconds;
 
 pub fn get_time_breakdown<'a>(time: u32) -> TimeBreakdown {
     let day = time / (24 * 60 * 60);
@@ -82,15 +86,16 @@ pub fn get_window_count(
 }
 
 pub fn get_file_bounds(start: u32, end: u32) -> Vec<(u32, u32)> {
-    let file_start = (start / 180) * 180;
-    let file_end = (end / 180) * 180;
+    let file_duration = get_file_duration_in_seconds();
+    let file_start = (start / file_duration) * file_duration;
+    let file_end = (end / file_duration) * file_duration;
 
     let mut file_bounds: Vec<(u32, u32)> = Vec::new();
     let mut current = file_start;
 
-    while current + 180 <= file_end {
-        file_bounds.push((current, current + 180));
-        current += 180;
+    while current + file_duration <= file_end {
+        file_bounds.push((current, current + file_duration));
+        current += file_duration;
     }
 
     file_bounds
@@ -115,3 +120,4 @@ pub fn get_starting_window_idx(
         offset_index + first_file_window_count + (idx - 1) as u32 * window_count
     }
 }
+

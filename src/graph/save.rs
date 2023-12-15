@@ -3,6 +3,7 @@ use raphtory::prelude::{Graph, GraphViewOps, TimeOps};
 use anyhow::Result;
 use rayon::prelude::*;
 use log::{info};
+use crate::utils::env_params::get_windows_directory;
 
 pub fn window_graph_and_save(
     graph: &Graph,
@@ -37,9 +38,16 @@ pub fn create_and_save_window(
 ) -> Result<String> {
     info!("Started loading window - {} ({}, {})", window_idx, start, end);
 
-    let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let dest_dir = match get_windows_directory() {
+        Some(windows_dir) => windows_dir,
+        _ => {
+            let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            format!("{}/data/windows", pathbuf.to_str().unwrap())
+        }
+    };
+
     let file_name = format!("window_{}_{}_{}", window_idx, start, end);
-    let dest_path = format!("{}/data/windows/{}", pathbuf.to_str().unwrap(), file_name);
+    let dest_path = format!("{}/{}", dest_dir, file_name);
 
     let graph_window = graph.window(
         (*start * 1000) as i64,
