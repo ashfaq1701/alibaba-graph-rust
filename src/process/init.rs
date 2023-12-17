@@ -7,15 +7,23 @@ use crate::utils::{get_files_in_directory, get_resolved_windows_dir};
 use crate::process::ops::base_op::BaseOp;
 
 pub fn run_process_data(options: &HashMap<&str, &str>) -> Result<Vec<f64>> {
-    let op = match options.get("op") {
-        Some(&"average_degree") => OpType::AverageDegree,
-        _ => return Err(anyhow!("Error parsing the op type."))
-    };
-
+    let op = options.get("op").map(|o| *o);
     run_op_and_return_results(op)
 }
 
-pub fn run_op_and_return_results(op: OpType) -> Result<Vec<f64>> {
+pub fn run_op_and_return_results(op_data: Option<&str>) -> Result<Vec<f64>> {
+    let maybe_op = match op_data {
+        Some(op_str) => OpType::from_str(op_str),
+        _ => None
+    };
+
+    let op = match maybe_op {
+        Some(op_value) => op_value,
+        _ => {
+            return Err(anyhow!("No valid operation value provided"));
+        }
+    };
+
     let window_file_paths = get_window_file_paths()?;
     let mut op_executor = get_op_executor(op, &window_file_paths);
 
