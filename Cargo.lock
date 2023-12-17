@@ -60,6 +60,7 @@ dependencies = [
  "flate2",
  "log",
  "num-integer",
+ "pyo3",
  "raphtory",
  "rayon",
  "reqwest",

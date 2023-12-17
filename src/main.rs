@@ -2,6 +2,7 @@ mod data;
 mod utils;
 mod graph;
 mod process;
+
 use std::env;
 use std::collections::HashMap;
 use log::{info, error};
