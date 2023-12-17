@@ -1,13 +1,15 @@
 pub mod env_params;
 
 use std::collections::HashMap;
+use std::fs;
 use std::fs::File;
+use std::path::PathBuf;
 use tar::Archive;
 use flate2::read::GzDecoder;
 use crate::data::structs::{TimeBreakdown, WindowIndexingType};
 use log::{error};
-use anyhow::Result;
-use crate::utils::env_params::get_file_duration_in_seconds;
+use anyhow::{anyhow, Result};
+use crate::utils::env_params::{get_file_duration_in_seconds, get_windows_directory};
 
 pub fn get_time_breakdown<'a>(time: u32) -> TimeBreakdown {
     let day = time / (24 * 60 * 60);
@@ -121,3 +123,31 @@ pub fn get_starting_window_idx(
     }
 }
 
+pub fn get_resolved_windows_dir() -> String {
+    match get_windows_directory() {
+        Some(windows_dir) => windows_dir,
+        _ => {
+            let pathbuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            format!("{}/data/windows", pathbuf.to_str().unwrap())
+        }
+    }
+}
+
+pub fn get_files_in_directory(dir_path: &String) -> Result<Vec<String>> {
+    match fs::read_dir(dir_path) {
+        Ok(entries) => {
+            let file_names = entries
+                .filter(|entry| entry.is_ok())
+                .map(|entry| entry.unwrap())
+                .filter(|entry| entry.path().is_file())
+                .map(|entry| entry.file_name().to_string_lossy().to_string())
+                .collect();
+
+            Ok(file_names)
+        }
+        Err(_) => {
+            Err(anyhow!("Error reading files from directory {}", dir_path))
+        }
+    }
+
+}
