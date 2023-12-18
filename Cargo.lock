@@ -61,6 +61,7 @@ dependencies = [
  "log",
  "num-integer",
  "pyo3",
+ "pyo3-log",
  "raphtory",
  "rayon",
  "reqwest",
@@ -1841,6 +1842,17 @@ checksum = "214929900fd25e6604661ed9cf349727c8920d47deff196c4e28165a6ef2a96b"
 dependencies = [
  "libc",
  "pyo3-build-config",
+]
+
+[[package]]
+name = "pyo3-log"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c10808ee7250403bedb24bc30c32493e93875fef7ba3e4292226fe924f398bd"
+dependencies = [
+ "arc-swap",
+ "log",
+ "pyo3",
 ]
 
 [[package]]

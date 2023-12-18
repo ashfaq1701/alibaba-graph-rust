@@ -1,17 +1,17 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use crate::process::structs::OpType;
+use crate::process::structs::{OpType, WindowResult};
 use anyhow::{anyhow, Result};
 use crate::process::op_mapper::get_op_executor;
 use crate::utils::{get_files_in_directory, get_resolved_windows_dir};
 use crate::process::ops::base_op::BaseOp;
 
-pub fn run_process_data(options: &HashMap<&str, &str>) -> Result<Vec<f64>> {
+pub fn run_process_data(options: &HashMap<&str, &str>) -> Result<Vec<WindowResult>> {
     let op = options.get("op").map(|o| *o);
     run_op_and_return_results(op)
 }
 
-pub fn run_op_and_return_results(op_data: Option<&str>) -> Result<Vec<f64>> {
+pub fn run_op_and_return_results(op_data: Option<&str>) -> Result<Vec<WindowResult>> {
     let maybe_op = match op_data {
         Some(op_str) => OpType::from_str(op_str),
         _ => None
