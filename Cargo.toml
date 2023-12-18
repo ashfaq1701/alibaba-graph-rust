@@ -19,8 +19,9 @@ rayon = "1.8.0"
 log = "0.4.20"
 env_logger = "0.10.1"
 dotenv = "0.15.0"
-pyo3 = "0.20.0"
+pyo3 = "0.19.0"
 
 [lib]
 name = "alibaba_graph_rust"
+crate-type = ["cdylib"]
 

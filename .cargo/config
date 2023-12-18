@@ -1,4 +1,4 @@
-[target.x86_64-apple-darwin]
+[target.'cfg(target_arch = "aarch64")']
 rustflags = [
     "-C", "link-arg=-undefined",
     "-C", "link-arg=dynamic_lookup",

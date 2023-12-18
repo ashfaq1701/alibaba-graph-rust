@@ -140,7 +140,7 @@ pub fn get_files_in_directory(dir_path: &String) -> Result<Vec<String>> {
                 .filter(|entry| entry.is_ok())
                 .map(|entry| entry.unwrap())
                 .filter(|entry| entry.path().is_file())
-                .map(|entry| entry.file_name().to_string_lossy().to_string())
+                .map(|entry| entry.file_name().into_string().unwrap())
                 .collect();
 
             Ok(file_names)
