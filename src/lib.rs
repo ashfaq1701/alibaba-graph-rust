@@ -27,6 +27,7 @@ pub fn run_op(op_data: Option<&str>) -> PyResult<Vec<WindowResult>> {
 #[pymodule]
 fn alibaba_graph_rust(_py: Python, m: &PyModule) -> PyResult<()> {
     pyo3_log::init();
+
     load_env_files();
 
     m.add_function(wrap_pyfunction!(run_op, m)?)?;

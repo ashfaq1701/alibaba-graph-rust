@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 setuptools = "*"
 maturin = "*"
+jupyter = "*"
 
 [dev-packages]
 
