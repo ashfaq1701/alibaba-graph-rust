@@ -1,13 +1,15 @@
 use pyo3::pyclass;
 
 pub enum OpType {
-    AverageDegree
+    AverageDegree,
+    NumberOfVertices
 }
 
 impl OpType {
     pub fn from_str(s: &str) -> Option<OpType> {
         match s {
             "average_degree" => Some(OpType::AverageDegree),
+            "number_of_vertices" => Some(OpType::NumberOfVertices),
             _ => None,
         }
     }

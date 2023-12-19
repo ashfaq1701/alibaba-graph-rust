@@ -4,7 +4,6 @@ use crate::process::structs::{OpType, WindowResult};
 use anyhow::{anyhow, Result};
 use crate::process::op_mapper::get_op_executor;
 use crate::utils::{get_files_in_directory, get_resolved_windows_dir};
-use crate::process::ops::base_op::BaseOp;
 
 pub fn run_process_data(options: &HashMap<&str, &str>) -> Result<Vec<WindowResult>> {
     let op = options.get("op").map(|o| *o);

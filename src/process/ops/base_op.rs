@@ -2,7 +2,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use crate::process::structs::{WindowInfo, WindowResult};
 
-fn run_operation_on_windows<T: BaseOp>(
+fn run_operation_on_windows<T: BaseOp + ?Sized>(
     instance: &mut T,
     window_paths: &Vec<String>
 ) -> Result<Vec<WindowResult>> {
@@ -40,7 +40,7 @@ fn get_window_info(window_file_name: &String) -> Result<WindowInfo> {
 
 pub trait BaseOp: Sync {
     fn perform_op_on_windows(&mut self, window_paths: &Vec<String>) -> Result<Vec<WindowResult>>
-        where Self: Sized {
+    {
         run_operation_on_windows(self, window_paths)
     }
 
