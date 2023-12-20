@@ -59,10 +59,21 @@ It supports one option.
 
   - `op` `required` - The operation we want to run on each window. The list is not exhaustive, because we will keep adding more operations. But this should be a valid operation key.
 
-## Sample Command
+## Sample Commands
+
+cargo run load start_time=180 end_time=540 window_size=60 connection_prop=instance_id window_indexing_type=seq_from_start
+
+cargo run load start_day=1 end_day=2 window_size=30 window_indexing_type=from_zero
+
+cargo run load start_day=1 start_hour=9 end_day=2 end_minute=9 window_size=60
+
+cargo run process op=average_degree
+
 
 ## Library Mode
 
+This project has both application and library modes. Above-mentioned commands run in application mode. But this project has a PyO3 interface with a function named `run_op`, which takes an op identifier as argument. After compilation the produced executable can be used to call this function from Python code.
+
 ## Building for Python
 
-## Running Python Notebook
+`Maturin` is a tool which makes PyO3 compilation easy for Rust code. In this project Maturin is installed by Pipenv. From the project root directory, we can run `maturin develop` to build and install this project as a Python dependency. After running this, we can run `import alibaba_graph_rust` from Python codes inside `graph_py/`.
