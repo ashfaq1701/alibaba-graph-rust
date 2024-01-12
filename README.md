@@ -1,5 +1,12 @@
 # Alibaba Graph Processor
 
+## About
+
+This project can read Alibaba's publicly available microservice traces dataset and then create windowed graphs from these data.
+
+Due to very efficient use of parallelization, It can efficiently process terabytes of data in a single personal computer.
+
+The Rust code can be used to build binary executables, which can later be called from python. It's a similar implementation like Numpy or Pandas work internally. 
 
 ## Prerequisites
 
