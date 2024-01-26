@@ -12,5 +12,4 @@ matplotlib = "*"
 [dev-packages]
 
 [requires]
-python_version = "3.12"
-python_full_version = "3.12.1"
+python_version = "3.11"
