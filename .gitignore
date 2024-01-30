@@ -4,3 +4,4 @@ target/
 data/raw/*.tar.gz
 .env.local
 *.so
+.env
