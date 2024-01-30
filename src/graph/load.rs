@@ -2,7 +2,7 @@ use std::cmp::min;
 use raphtory::{prelude::*, };
 use std::fs;
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use csv::ReaderBuilder;
 use crate::data::structs::{ConnectionProp, WindowIndexingType};
@@ -12,7 +12,7 @@ use anyhow::Result;
 use raphtory::core::ArcStr;
 use crate::graph::save::window_graph_and_save;
 use crate::utils::{get_file_bounds, get_starting_window_idx, get_window_count, get_windows};
-use crate::utils::env_params::get_file_duration_in_seconds;
+use crate::utils::env_params::{get_file_duration_in_seconds, get_tmp_directory};
 use log::{info};
 use rayon::prelude::*;
 
@@ -115,14 +115,19 @@ pub fn load_event_file(
     graph_mutex: &Mutex<&Graph>,
     connection_prop: &ConnectionProp) -> Result<()> {
 
-    info!("Extracting file {} in /tmp directory", file_path);
-    utils::extract_gz_file(file_path, &"/tmp".to_string())
+    let tmp_dir = match get_tmp_directory() {
+        Some(dir) => dir,
+        _ => "/tmp".to_string()
+    };
+
+    info!("Extracting file {} in {} directory", file_path, &tmp_dir);
+    utils::extract_gz_file(file_path, &tmp_dir)
         .expect("Error in extracting file");
 
     let source_path = Path::new(file_path);
     let file_name = source_path.file_name().unwrap().to_str().unwrap();
     let file_parts: Vec<&str> = file_name.split(".").collect();
-    let dst_file_path = format!("{}/{}.csv", "/tmp", file_parts[0]);
+    let dst_file_path = format!("{}/{}.csv", &tmp_dir, file_parts[0]);
 
     match populate_graph(&dst_file_path, graph_mutex, connection_prop) {
         Ok(_) => {

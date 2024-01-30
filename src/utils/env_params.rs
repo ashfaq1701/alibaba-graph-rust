@@ -27,3 +27,10 @@ pub fn get_windows_directory() -> Option<String> {
         _ => None
     }
 }
+
+pub fn get_tmp_directory() -> Option<String> {
+    match env::var("TMP_DIR") {
+        Ok(windows_dir) => Some(windows_dir),
+        _ => None
+    }
+}
