@@ -2,7 +2,7 @@ use std::cmp::min;
 use raphtory::{prelude::*, };
 use std::fs;
 use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Mutex;
 use csv::ReaderBuilder;
 use crate::data::structs::{ConnectionProp, WindowIndexingType};
