@@ -15,6 +15,7 @@ impl OpType {
     }
 }
 
+#[derive(std::fmt::Debug)]
 pub struct WindowInfo {
     pub stored_window_number: u32,
     pub start: u32,

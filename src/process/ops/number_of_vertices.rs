@@ -14,6 +14,6 @@ impl<'a> BaseOp for NumberOfVertices<'a> {
     ) -> anyhow::Result<f64> {
         info!("Started loading {}", window_file_path);
         let graph = Graph::load_from_file(window_file_path)?;
-        Ok(graph.vertices().len() as f64)
+        Ok(graph.nodes().len() as f64)
     }
 }

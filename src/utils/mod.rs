@@ -3,7 +3,7 @@ pub mod env_params;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tar::Archive;
 use flate2::read::GzDecoder;
 use crate::data::structs::{TimeBreakdown, WindowIndexingType};
@@ -150,4 +150,15 @@ pub fn get_files_in_directory(dir_path: &String) -> Result<Vec<String>> {
         }
     }
 
+}
+
+pub fn get_file_name_from_path(file_path: &String) -> Result<String> {
+    let maybe_file_path = Path::new(file_path)
+        .file_name()
+        .and_then(|f| f.to_str());
+
+    match maybe_file_path {
+        Some(file_name) => Ok(file_name.to_string()),
+        _ => Err(anyhow!("Could not parse file path {}", file_path))
+    }
 }

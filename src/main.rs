@@ -5,13 +5,13 @@ mod process;
 
 use std::env;
 use std::collections::HashMap;
-use anyhow::Error;
 use log::{info, error};
+use anyhow::{anyhow, Result};
 use crate::data::init::run_get_data;
 use crate::process::init::run_process_data;
 use crate::utils::env_params::load_env_files;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     load_env_files();
 
     env::set_var("RUST_LOG", "info");
@@ -40,26 +40,28 @@ fn main() -> Result<(), Error> {
                     Ok(())
                 }
                 Err(e) => {
-                    Err(e)
+                    error!("Error downloading data {:?}", e);
+                    Err(anyhow!(e))
                 }
             }
         }
         Some("process") => {
             match run_process_data(&options) {
-                Ok(processing_result) => {
-                    info!("Processed data successfully {:?}", processing_result);
+                Ok(result) => {
+                    info!("Processed data successfully {:?}", result);
                     Ok(())
                 }
                 Err(e) => {
-                    Err(e)
+                    error!("Error loading data {:?}", e);
+                    Err(anyhow!(e))
                 }
             }
         }
         Some(_) => {
-            Err(anyhow::anyhow!("Invalid command"))
+            Err(anyhow!("Invalid command"))
         }
         _ => {
-            Err(anyhow::anyhow!("No command"))
+            Err(anyhow!("No command"))
         }
     }
 }

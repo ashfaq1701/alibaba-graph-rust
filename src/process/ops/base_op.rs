@@ -1,6 +1,7 @@
 use anyhow::Result;
 use rayon::prelude::*;
 use crate::process::structs::{WindowInfo, WindowResult};
+use crate::utils::get_file_name_from_path;
 
 fn run_operation_on_windows<T: BaseOp + ?Sized>(
     instance: &mut T,
@@ -30,7 +31,8 @@ fn run_operation_on_windows<T: BaseOp + ?Sized>(
     Ok(result)
 }
 
-fn get_window_info(window_file_name: &String) -> Result<WindowInfo> {
+fn get_window_info(window_file_path: &String) -> Result<WindowInfo> {
+    let window_file_name = &get_file_name_from_path(window_file_path)?;
     let parts: Vec<&str> = window_file_name.split("_").collect();
     let stored_window_number = parts[1].parse::<u32>()?;
     let start = parts[2].parse::<u32>()?;
