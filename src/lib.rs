@@ -16,8 +16,8 @@ use process::init::run_op_and_return_results;
 use crate::utils::env_params::load_env_files;
 
 #[pyfunction]
-pub fn run_op(py: Python, op_data: Option<&str>) -> PyResult<Vec<(f64, u32, u32, u32, u32)>> {
-    py.allow_threads(|| match run_op_and_return_results(op_data) {
+pub fn run_op(py: Python, op_data: Option<&str>, windows_dir: Option<&str>) -> PyResult<Vec<(f64, u32, u32, u32, u32)>> {
+    py.allow_threads(|| match run_op_and_return_results(op_data, windows_dir) {
         Ok(result) => {
             let result_tuples = result
                 .iter()

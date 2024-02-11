@@ -7,10 +7,12 @@ use crate::utils::{get_files_in_directory, get_resolved_windows_dir};
 
 pub fn run_process_data(options: &HashMap<&str, &str>) -> Result<Vec<WindowResult>> {
     let op = options.get("op").map(|o| *o);
-    run_op_and_return_results(op)
+    let windows_dir = options.get("windows_dir").map(|dir| *dir);
+
+    run_op_and_return_results(op, windows_dir)
 }
 
-pub fn run_op_and_return_results(op_data: Option<&str>) -> Result<Vec<WindowResult>> {
+pub fn run_op_and_return_results(op_data: Option<&str>, windows_dir: Option<&str>) -> Result<Vec<WindowResult>> {
     let maybe_op = match op_data {
         Some(op_str) => OpType::from_str(op_str),
         _ => None
@@ -23,16 +25,20 @@ pub fn run_op_and_return_results(op_data: Option<&str>) -> Result<Vec<WindowResu
         }
     };
 
-    let window_file_paths = get_window_file_paths()?;
+    let window_file_paths = get_window_file_paths(windows_dir)?;
     let mut op_executor = get_op_executor(op, &window_file_paths);
 
     op_executor.perform_op_on_windows(&window_file_paths)
 }
 
-pub fn get_window_file_paths() -> Result<Vec<String>> {
-    let windows_dir = get_resolved_windows_dir();
-    let windows_dir_arc = Arc::new(&windows_dir);
-    let files_in_windows_dir = get_files_in_directory(&windows_dir)?;
+pub fn get_window_file_paths(windows_dir: Option<&str>) -> Result<Vec<String>> {
+    let resolved_windows_dir = match windows_dir {
+        Some(dir) => dir.to_string(),
+        _ => get_resolved_windows_dir()
+    };
+
+    let windows_dir_arc = Arc::new(&resolved_windows_dir);
+    let files_in_windows_dir = get_files_in_directory(&resolved_windows_dir)?;
 
     let mut window_files: Vec<&String> = files_in_windows_dir
         .iter()
