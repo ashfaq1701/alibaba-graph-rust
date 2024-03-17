@@ -5,7 +5,7 @@ use serde::{Deserialize};
 pub struct Trace {
     pub timestamp: i64,
     traceid: String,
-    service: String,
+    pub service: String,
     rpc_id: String,
     rpctype: String,
     pub um: String,

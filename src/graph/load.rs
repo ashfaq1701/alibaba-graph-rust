@@ -168,7 +168,8 @@ pub fn populate_graph(
                         let props = [
                             ("uminstanceid".to_owned(), Prop::Str(ArcStr::from(trace.uminstanceid))),
                             ("dminstanceid".to_owned(), Prop::Str(ArcStr::from(trace.dminstanceid))),
-                            ("rt".to_owned(), Prop::F32(trace.rt))
+                            ("rt".to_owned(), Prop::F32(trace.rt)),
+                            ("service".to_owned(), Prop::Str(ArcStr::from(trace.service)))
                         ];
 
                         (trace.um, trace.dm, props)
@@ -184,7 +185,8 @@ pub fn populate_graph(
                         let props = [
                             ("um".to_owned(), Prop::Str(ArcStr::from(trace.um))),
                             ("dm".to_owned(), Prop::Str(ArcStr::from(trace.dm))),
-                            ("rt".to_owned(), Prop::F32(trace.rt))
+                            ("rt".to_owned(), Prop::F32(trace.rt)),
+                            ("service".to_owned(), Prop::Str(ArcStr::from(trace.service)))
                         ];
 
                         (trace.uminstanceid, trace.dminstanceid, props)
