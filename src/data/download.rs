@@ -9,9 +9,9 @@ pub fn download(url: &str, destination: &str, retries: u32) -> Result<()> {
     info!("Starting download of {} to the {}", url, destination);
 
     for attempt in 0..=retries {
-        let mut response = reqwest::blocking::get(url)?;
+        let mut response = reqwest::blocking::get(url);
 
-        if response.status().is_success() {
+        if response.is_ok() && response.unwrap().status().is_success() {
             let mut file = File::create(destination)?;
             copy(&mut response, &mut file)?;
             info!("File downloaded successfully to: {}", destination);
