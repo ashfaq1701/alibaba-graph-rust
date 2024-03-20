@@ -2,30 +2,26 @@ extern crate reqwest;
 extern crate anyhow;
 use log::{info, error};
 
-use std::{fs::File, io::copy};
+use std::{fs::File, io::copy, time::Duration};
 use anyhow::{anyhow, Result};
 
-pub fn download(url: &str, destination: &str) -> Result<()> {
+pub fn download(url: &str, destination: &str, retries: u32) -> Result<()> {
     info!("Starting download of {} to the {}", url, destination);
-    let maybe_response = reqwest::blocking::get(url);
 
-    let mut response = if let Ok(resp) = maybe_response {
-        resp
-    } else {
-        return Err(anyhow!("Failed to get response of {}", url));
-    };
+    for attempt in 0..=retries {
+        let mut response = reqwest::blocking::get(url)?;
 
-    if !response.status().is_success() {
-        error!("Failed to download file. Status code: {}", response.status());
-        return Err(anyhow!("Failed to download {}", url));
+        if response.status().is_success() {
+            let mut file = File::create(destination)?;
+            copy(&mut response, &mut file)?;
+            info!("File downloaded successfully to: {}", destination);
+            return Ok(());
+        } else {
+            error!("Download attempt {} failed. Status code: {}", attempt + 1, response.status());
+            let backoff_duration = Duration::from_secs(2u32.pow(attempt) as u64);
+            std::thread::sleep(backoff_duration);
+        }
     }
 
-    let mut file = File::create(destination)?;
-
-    if let Ok(_) = copy(&mut response, &mut file) {
-        info!("File downloaded successfully to: {}", destination);
-        Ok(())
-    } else {
-        Err(anyhow!("Failed to copy response from {} to {}", url, destination))
-    }
+    Err(anyhow!("Failed to download {} after {} retries", url, retries))
 }

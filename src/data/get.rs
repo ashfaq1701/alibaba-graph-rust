@@ -99,7 +99,7 @@ pub fn download_raw_files<'a>(
             if let Ok(_) = fs::metadata(&dest_file) {
                 info!("File {} already exists", file_name);
             } else {
-                download::download(&file_url, &dest_file)?;
+                download::download(&file_url, &dest_file, 5)?;
             }
 
             Ok(dest_file)
