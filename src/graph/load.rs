@@ -99,6 +99,7 @@ fn init_load_event_file(
 
     let graph = Graph::new();
     let graph_mutex = Mutex::new(&graph);
+
     load_event_file(file_path, &graph_mutex, connection_prop)?;
 
     let window_files = window_graph_and_save(
